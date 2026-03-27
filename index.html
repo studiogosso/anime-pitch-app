@@ -213,6 +213,25 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 }
 .memo-save-btn:active{transform:scale(0.95)}
 
+/* ===== Review/Feedback ===== */
+.review-section{background:var(--bg3);border-radius:var(--card-radius);padding:14px;margin:12px 16px}
+.review-label{font-size:0.8rem;font-weight:700;color:var(--cyan);margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.star-rating{display:flex;gap:4px;margin-bottom:10px}
+.star-rating .star{font-size:1.8rem;cursor:pointer;color:var(--bg4);transition:color 0.15s}
+.star-rating .star.active{color:var(--yellow)}
+.star-rating .star:hover{color:var(--yellow);opacity:0.7}
+.status-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.status-pill{padding:5px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;border:1px solid var(--bg4);color:var(--text2);cursor:pointer;transition:var(--transition)}
+.status-pill.active[data-status="go"]{background:rgba(52,211,153,0.2);border-color:var(--green);color:var(--green)}
+.status-pill.active[data-status="rework"]{background:rgba(251,191,36,0.2);border-color:var(--yellow);color:var(--yellow)}
+.status-pill.active[data-status="pass"]{background:rgba(248,113,113,0.2);border-color:var(--red);color:var(--red)}
+.status-pill.active[data-status="maybe"]{background:rgba(124,92,252,0.2);border-color:var(--accent);color:var(--accent)}
+.review-comment{width:100%;min-height:60px;background:var(--bg2);border:1px solid var(--bg4);border-radius:10px;padding:10px;resize:vertical;font-size:0.85rem;margin-bottom:8px}
+.review-comment:focus{border-color:var(--cyan)}
+.review-save-btn{background:linear-gradient(135deg,var(--cyan),#0ea5e9);color:#000;font-weight:700;padding:8px 20px;border-radius:10px;font-size:0.85rem;width:100%}
+.review-save-btn:active{transform:scale(0.95)}
+.review-saved{font-size:0.75rem;color:var(--green);margin-top:6px;text-align:center}
+
 /* ===== Markdown Content ===== */
 .md-content{
   padding:16px;line-height:1.7;font-size:0.9rem;
@@ -356,6 +375,25 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
   <div class="detail-page" id="detailView">
     <div class="detail-hero" id="detailHero"></div>
     <div class="detail-actions" id="detailActions"></div>
+    <div class="review-section" id="reviewSection">
+      <div class="review-label">&#11088; レビュー</div>
+      <div class="star-rating" id="starRating">
+        <span class="star" data-val="1">&#9733;</span>
+        <span class="star" data-val="2">&#9733;</span>
+        <span class="star" data-val="3">&#9733;</span>
+        <span class="star" data-val="4">&#9733;</span>
+        <span class="star" data-val="5">&#9733;</span>
+      </div>
+      <div class="status-pills" id="statusPills">
+        <span class="status-pill" data-status="go">GO</span>
+        <span class="status-pill" data-status="rework">要改善</span>
+        <span class="status-pill" data-status="maybe">保留</span>
+        <span class="status-pill" data-status="pass">見送り</span>
+      </div>
+      <textarea class="review-comment" id="reviewComment" placeholder="フィードバックコメント..."></textarea>
+      <button class="review-save-btn" id="reviewSaveBtn">レビュー保存</button>
+      <div class="review-saved" id="reviewSaved"></div>
+    </div>
     <div class="memo-section" id="memoSection">
       <div class="memo-label">&#128221; メモ</div>
       <textarea id="memoText" placeholder="この企画についてメモを残す..."></textarea>
@@ -376,6 +414,7 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
     <div class="dash-section">
       <h3>エクスポート</h3>
       <button class="export-btn" id="exportBtn">&#128230; ライク済みをJSON出力</button>
+      <button class="export-btn" id="exportFeedbackBtn" style="margin-top:8px;background:linear-gradient(135deg,var(--cyan),#0ea5e9)">&#128202; フィードバックJSON出力 (Claude Code用)</button>
     </div>
   </div>
 </div>
@@ -412,6 +451,7 @@ let state = {
   currentId: null,
   likes: {},           // id -> true
   memos: {},           // id -> string
+  reviews: {},         // id -> {rating, status, comment, timestamp}
 };
 
 // ===== Storage =====
@@ -419,12 +459,15 @@ function loadStorage(){
   try{
     const l = localStorage.getItem('ap_likes');
     const m = localStorage.getItem('ap_memos');
+    const r = localStorage.getItem('ap_reviews');
     if(l) state.likes = JSON.parse(l);
     if(m) state.memos = JSON.parse(m);
+    if(r) state.reviews = JSON.parse(r);
   }catch(e){}
 }
 function saveLikes(){ localStorage.setItem('ap_likes', JSON.stringify(state.likes)); }
 function saveMemos(){ localStorage.setItem('ap_memos', JSON.stringify(state.memos)); }
+function saveReviews(){ localStorage.setItem('ap_reviews', JSON.stringify(state.reviews)); }
 
 // ===== Tag color map =====
 const tagColorMap = {};
@@ -657,11 +700,13 @@ function renderDashboard(){
   const total = PROPOSALS_DATA.length;
   const likeCount = Object.keys(state.likes).filter(k => state.likes[k]).length;
   const memoCount = Object.keys(state.memos).filter(k => state.memos[k] && state.memos[k].trim()).length;
+  const reviewCount = Object.keys(state.reviews).filter(k => state.reviews[k]).length;
 
   document.getElementById('dashGrid').innerHTML = `
     <div class="dash-card"><div class="num">${total}</div><div class="lbl">総企画数</div></div>
     <div class="dash-card"><div class="num">${likeCount}</div><div class="lbl">ライク</div></div>
     <div class="dash-card"><div class="num">${memoCount}</div><div class="lbl">メモ</div></div>
+    <div class="dash-card"><div class="num" style="color:var(--cyan)">${reviewCount}</div><div class="lbl">レビュー</div></div>
   `;
 
   const tagCounts = {};
@@ -806,7 +851,90 @@ function init(){
     showView(item.dataset.view);
   });
 
-  // Export
+  // ===== Review System =====
+  document.getElementById('starRating').addEventListener('click', (e) => {
+    const star = e.target.closest('.star');
+    if(!star) return;
+    const val = parseInt(star.dataset.val);
+    const id = state.currentId;
+    if(!state.reviews[id]) state.reviews[id] = {};
+    state.reviews[id].rating = val;
+    updateStarDisplay(val);
+  });
+
+  document.getElementById('statusPills').addEventListener('click', (e) => {
+    const pill = e.target.closest('.status-pill');
+    if(!pill) return;
+    const status = pill.dataset.status;
+    const id = state.currentId;
+    if(!state.reviews[id]) state.reviews[id] = {};
+    state.reviews[id].status = status;
+    document.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+  });
+
+  document.getElementById('reviewSaveBtn').addEventListener('click', () => {
+    const id = state.currentId;
+    if(!id) return;
+    if(!state.reviews[id]) state.reviews[id] = {};
+    state.reviews[id].comment = document.getElementById('reviewComment').value;
+    state.reviews[id].timestamp = new Date().toISOString();
+    saveReviews();
+    document.getElementById('reviewSaved').textContent = '保存しました (' + new Date().toLocaleTimeString() + ')';
+    showToast('レビュー保存しました');
+  });
+
+  function updateStarDisplay(val){
+    document.querySelectorAll('#starRating .star').forEach(s => {
+      s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+    });
+  }
+
+  function loadReviewForCurrent(){
+    const id = state.currentId;
+    const r = state.reviews[id];
+    document.getElementById('reviewComment').value = r ? (r.comment||'') : '';
+    updateStarDisplay(r ? (r.rating||0) : 0);
+    document.querySelectorAll('.status-pill').forEach(p => {
+      p.classList.toggle('active', r && r.status === p.dataset.status);
+    });
+    document.getElementById('reviewSaved').textContent = r && r.timestamp ? '最終保存: '+new Date(r.timestamp).toLocaleString() : '';
+  }
+
+  // Hook into detail view opening
+  const origShowDetail = showDetail;
+  showDetail = function(id){
+    origShowDetail(id);
+    setTimeout(loadReviewForCurrent, 50);
+  };
+
+  // Feedback export (Claude Code用)
+  document.getElementById('exportFeedbackBtn').addEventListener('click', () => {
+    const feedback = {
+      exportDate: new Date().toISOString(),
+      summary: { total: PROPOSALS_DATA.length, reviewed: Object.keys(state.reviews).length, liked: Object.keys(state.likes).filter(k=>state.likes[k]).length },
+      reviews: []
+    };
+    for(const [id, r] of Object.entries(state.reviews)){
+      const p = PROPOSALS_DATA.find(x => x.id === id);
+      if(!p || !r) continue;
+      feedback.reviews.push({
+        id, title: p.title, type: p.type, rating: r.rating||0, status: r.status||'', comment: r.comment||'',
+        currentRating: p.rating, tags: p.tags, logline: p.logline, memo: state.memos[id]||'',
+        liked: !!state.likes[id], timestamp: r.timestamp||''
+      });
+    }
+    feedback.reviews.sort((a,b) => (b.rating||0) - (a.rating||0));
+    const json = JSON.stringify(feedback, null, 2);
+    const blob = new Blob([json], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'feedback.json'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('フィードバックをエクスポートしました');
+  });
+
+  // Export (liked)
   document.getElementById('exportBtn').addEventListener('click', () => {
     const likedIds = Object.keys(state.likes).filter(k => state.likes[k]);
     const likedData = PROPOSALS_DATA.filter(p => likedIds.includes(p.id));
