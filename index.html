@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Anime Pitch Reviewer</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d14;--bg2:#161625;--bg3:#1e1e32;--bg4:#282845;
+  --text:#e8e8f0;--text2:#a0a0b8;--text3:#6a6a82;
+  --accent:#7c5cfc;--accent2:#a855f7;--accent3:#6366f1;
+  --pink:#ec4899;--pink2:#f472b6;
+  --green:#34d399;--yellow:#fbbf24;--red:#f87171;--cyan:#22d3ee;
+  --card-radius:14px;--transition:0.25s ease;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:15px;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;
+  overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;border:none;background:none;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,textarea{font:inherit;border:none;background:none;color:inherit;outline:none}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+
+/* ===== Header ===== */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(13,13,20,0.92);backdrop-filter:blur(12px);
+  padding:12px 16px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(124,92,252,0.15);
+}
+.header-title{font-size:1.15rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  white-space:nowrap;
+}
+.header-back{
+  width:36px;height:36px;border-radius:10px;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  flex-shrink:0;transition:var(--transition);
+}
+.header-back:active{transform:scale(0.9)}
+.header-right{margin-left:auto;display:flex;gap:8px}
+
+/* ===== Search ===== */
+.search-wrap{
+  margin:12px 16px;position:relative;
+}
+.search-wrap input{
+  width:100%;padding:12px 16px 12px 42px;
+  background:var(--bg2);border:1px solid var(--bg4);border-radius:12px;
+  font-size:0.95rem;color:var(--text);transition:var(--transition);
+}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,252,0.15)}
+.search-wrap .search-icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  color:var(--text3);font-size:1rem;pointer-events:none;
+}
+
+/* ===== Filter Bar ===== */
+.filter-bar{
+  padding:0 16px;display:flex;gap:8px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+  margin-bottom:8px;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{
+  flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+  border:1px solid transparent;white-space:nowrap;
+}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-chip:active{transform:scale(0.95)}
+
+/* ===== Sort / Control Bar ===== */
+.control-bar{
+  padding:8px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.control-bar .count{font-size:0.8rem;color:var(--text3);margin-right:auto}
+.ctrl-btn{
+  padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+}
+.ctrl-btn.active{background:var(--accent3);color:#fff}
+.ctrl-btn:active{transform:scale(0.95)}
+.and-or-toggle{
+  padding:4px;border-radius:8px;background:var(--bg3);display:flex;
+}
+.and-or-toggle button{
+  padding:5px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;
+  transition:var(--transition);color:var(--text3);
+}
+.and-or-toggle button.active{background:var(--accent);color:#fff}
+
+/* ===== Tag Badges ===== */
+.tag-colors{--t0:#7c5cfc;--t1:#ec4899;--t2:#f59e0b;--t3:#10b981;--t4:#06b6d4;--t5:#8b5cf6;--t6:#ef4444;--t7:#3b82f6;--t8:#14b8a6;--t9:#f97316}
+.tag-badge{
+  display:inline-flex;align-items:center;padding:3px 10px;border-radius:10px;
+  font-size:0.7rem;font-weight:600;white-space:nowrap;transition:var(--transition);
+  cursor:pointer;border:1px solid transparent;
+}
+.tag-badge:active{transform:scale(0.93)}
+.tag-badge.selected{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,0.2)}
+
+/* ===== Cards ===== */
+.card-list{padding:8px 16px;display:flex;flex-direction:column;gap:12px}
+.card{
+  background:var(--bg2);border-radius:var(--card-radius);padding:16px;
+  border:1px solid var(--bg4);transition:var(--transition);
+  position:relative;overflow:hidden;
+  animation:cardIn 0.3s ease both;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--pink));opacity:0;
+  transition:var(--transition);
+}
+.card:active{transform:scale(0.985)}
+.card:active::before{opacity:1}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.card-title{font-size:1.05rem;font-weight:700;flex:1;line-height:1.3}
+.card-type{
+  flex-shrink:0;padding:3px 8px;border-radius:6px;font-size:0.65rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+}
+.card-type.proposal{background:rgba(124,92,252,0.2);color:var(--accent)}
+.card-type.seed{background:rgba(251,191,36,0.2);color:var(--yellow)}
+.card-rating{
+  flex-shrink:0;width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;font-weight:800;
+}
+.card-rating.S{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000}
+.card-rating.A{background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff}
+.card-rating.B{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+.card-rating.C{background:linear-gradient(135deg,#6b7280,#4b5563);color:#fff}
+.card-logline{font-size:0.82rem;color:var(--text2);line-height:1.5;margin-bottom:10px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card-heart{
+  position:absolute;top:14px;right:14px;width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(0,0,0,0.3);font-size:1.1rem;
+  transition:var(--transition);z-index:2;
+}
+.card-heart.liked{color:var(--pink);animation:heartPop 0.35s ease}
+.card-heart:active{transform:scale(0.85)}
+@keyframes heartPop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+.card-memo-indicator{
+  position:absolute;bottom:14px;right:14px;font-size:0.7rem;
+  color:var(--yellow);display:flex;align-items:center;gap:3px;
+}
+
+/* ===== Detail Page ===== */
+.detail-page{
+  display:none;padding:0 0 32px;
+}
+.detail-page.visible{display:block}
+.detail-hero{
+  padding:20px 16px;
+  background:linear-gradient(180deg,var(--bg3) 0%,var(--bg) 100%);
+}
+.detail-hero .title{font-size:1.4rem;font-weight:800;margin-bottom:6px}
+.detail-hero .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.detail-hero .tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.highlight-box{
+  background:var(--bg2);border-radius:12px;padding:14px;margin-bottom:10px;
+  border-left:3px solid var(--accent);
+}
+.highlight-box.hook{border-left-color:var(--pink)}
+.highlight-box .label{font-size:0.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--accent);margin-bottom:4px}
+.highlight-box.hook .label{color:var(--pink)}
+.highlight-box p{font-size:0.88rem;line-height:1.6;color:var(--text)}
+.detail-actions{
+  display:flex;gap:10px;padding:12px 16px;
+}
+.detail-action-btn{
+  flex:1;padding:12px;border-radius:12px;font-size:0.85rem;font-weight:700;
+  text-align:center;transition:var(--transition);
+}
+.detail-action-btn.like-btn{background:var(--bg3);color:var(--text2)}
+.detail-action-btn.like-btn.liked{background:rgba(236,72,153,0.15);color:var(--pink)}
+.detail-action-btn:active{transform:scale(0.96)}
+
+/* ===== Memo ===== */
+.memo-section{
+  margin:0 16px 16px;padding:14px;background:var(--bg2);border-radius:12px;
+  border:1px solid var(--bg4);
+}
+.memo-section .memo-label{font-size:0.8rem;font-weight:700;color:var(--yellow);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.memo-section textarea{
+  width:100%;min-height:80px;padding:10px;background:var(--bg);
+  border:1px solid var(--bg4);border-radius:8px;resize:vertical;
+  font-size:0.85rem;line-height:1.5;color:var(--text);
+  transition:var(--transition);
+}
+.memo-section textarea:focus{border-color:var(--accent)}
+.memo-section .memo-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.memo-save-btn{
+  padding:8px 18px;border-radius:8px;font-size:0.8rem;font-weight:700;
+  background:var(--accent);color:#fff;transition:var(--transition);
+}
+.memo-save-btn:active{transform:scale(0.95)}
+
+/* ===== Markdown Content ===== */
+.md-content{
+  padding:16px;line-height:1.7;font-size:0.9rem;
+}
+.md-content h1{font-size:1.4rem;font-weight:800;margin:20px 0 10px;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.md-content h2{font-size:1.15rem;font-weight:700;margin:18px 0 8px;color:var(--accent);
+  padding-bottom:4px;border-bottom:1px solid var(--bg4)}
+.md-content h3{font-size:1rem;font-weight:700;margin:14px 0 6px;color:var(--text)}
+.md-content p{margin:8px 0;color:var(--text2)}
+.md-content ul,.md-content ol{margin:8px 0 8px 20px;color:var(--text2)}
+.md-content li{margin:4px 0}
+.md-content strong{color:var(--text);font-weight:700}
+.md-content table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.82rem}
+.md-content th{background:var(--bg3);padding:8px 10px;text-align:left;font-weight:700;
+  border:1px solid var(--bg4)}
+.md-content td{padding:8px 10px;border:1px solid var(--bg4);color:var(--text2)}
+.md-content tr:nth-child(even) td{background:rgba(30,30,50,0.4)}
+
+/* ===== Dashboard ===== */
+.dashboard{display:none;padding:16px}
+.dashboard.visible{display:block}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.dash-card{
+  background:var(--bg2);border-radius:12px;padding:16px 12px;text-align:center;
+  border:1px solid var(--bg4);
+}
+.dash-card .num{font-size:1.6rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.dash-card .lbl{font-size:0.7rem;color:var(--text3);margin-top:2px}
+.dash-section{margin-bottom:20px}
+.dash-section h3{font-size:0.9rem;font-weight:700;color:var(--text2);margin-bottom:10px}
+.dash-tag-row{
+  display:flex;align-items:center;gap:8px;padding:8px 0;
+  border-bottom:1px solid var(--bg4);
+}
+.dash-tag-row .tag-name{flex:1;font-size:0.85rem}
+.dash-tag-row .tag-count{font-size:0.85rem;font-weight:700;color:var(--accent)}
+.dash-tag-bar{flex:2;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.dash-tag-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+.export-btn{
+  width:100%;padding:14px;border-radius:12px;font-size:0.9rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;
+  transition:var(--transition);margin-top:8px;
+}
+.export-btn:active{transform:scale(0.97)}
+
+/* ===== Bottom Nav ===== */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(13,13,20,0.95);backdrop-filter:blur(12px);
+  border-top:1px solid rgba(124,92,252,0.15);
+  display:flex;padding:6px 0 calc(6px + var(--safe-bottom));
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 4px;font-size:0.65rem;color:var(--text3);transition:var(--transition);
+}
+.nav-item .nav-icon{font-size:1.3rem;transition:var(--transition)}
+.nav-item.active{color:var(--accent)}
+.nav-item.active .nav-icon{transform:scale(1.1)}
+.nav-item:active{transform:scale(0.9)}
+
+/* ===== Empty State ===== */
+.empty-state{
+  text-align:center;padding:48px 24px;color:var(--text3);
+}
+.empty-state .icon{font-size:3rem;margin-bottom:12px;opacity:0.5}
+.empty-state p{font-size:0.9rem}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--bg3);color:var(--text);padding:10px 20px;border-radius:10px;
+  font-size:0.82rem;font-weight:600;opacity:0;transition:all 0.3s ease;
+  pointer-events:none;z-index:200;border:1px solid var(--bg4);
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== Utilities ===== */
+.hidden{display:none!important}
+</style>
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="apple-touch-icon" href="./icon.svg">
+<meta name="theme-color" content="#0d0d14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="企画レビュー">
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <header class="header" id="header">
+    <button class="header-back hidden" id="backBtn" aria-label="戻る">&#8592;</button>
+    <div class="header-title" id="headerTitle">Anime Pitch Reviewer</div>
+    <div class="header-right" id="headerRight"></div>
+  </header>
+
+  <!-- List View -->
+  <div id="listView">
+    <div class="search-wrap">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" id="searchInput" placeholder="企画を検索...">
+    </div>
+
+    <div class="filter-bar" id="typeFilter">
+      <button class="filter-chip active" data-type="all">すべて</button>
+      <button class="filter-chip" data-type="proposal">企画書</button>
+      <button class="filter-chip" data-type="seed">シード</button>
+      <button class="filter-chip" data-type="liked">&#10084; ライク済</button>
+      <button class="filter-chip" data-type="memo">&#9997; メモ付</button>
+    </div>
+
+    <div class="filter-bar" id="tagFilter"></div>
+
+    <div class="control-bar">
+      <span class="count" id="resultCount"></span>
+      <div class="and-or-toggle" id="andOrToggle">
+        <button class="active" data-mode="or">OR</button>
+        <button data-mode="and">AND</button>
+      </div>
+      <button class="ctrl-btn" id="sortBtn" data-sort="rating">評価順</button>
+    </div>
+
+    <div class="card-list" id="cardList"></div>
+    <div class="empty-state hidden" id="emptyState">
+      <div class="icon">&#128270;</div>
+      <p>条件に一致する企画がありません</p>
+    </div>
+  </div>
+
+  <!-- Detail View -->
+  <div class="detail-page" id="detailView">
+    <div class="detail-hero" id="detailHero"></div>
+    <div class="detail-actions" id="detailActions"></div>
+    <div class="memo-section" id="memoSection">
+      <div class="memo-label">&#128221; メモ</div>
+      <textarea id="memoText" placeholder="この企画についてメモを残す..."></textarea>
+      <div class="memo-actions">
+        <button class="memo-save-btn" id="memoSaveBtn">保存</button>
+      </div>
+    </div>
+    <div class="md-content" id="mdContent"></div>
+  </div>
+
+  <!-- Dashboard View -->
+  <div class="dashboard" id="dashboardView">
+    <div class="dash-grid" id="dashGrid"></div>
+    <div class="dash-section" id="dashTags">
+      <h3>タグ別企画数</h3>
+      <div id="dashTagList"></div>
+    </div>
+    <div class="dash-section">
+      <h3>エクスポート</h3>
+      <button class="export-btn" id="exportBtn">&#128230; ライク済みをJSON出力</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" data-view="list">
+    <span class="nav-icon">&#128196;</span>
+    <span>一覧</span>
+  </button>
+  <button class="nav-item" data-view="dashboard">
+    <span class="nav-icon">&#128202;</span>
+    <span>ダッシュボード</span>
+  </button>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+
+// ===== State =====
+const TAG_COLORS = ['#7c5cfc','#ec4899','#f59e0b','#10b981','#06b6d4','#8b5cf6','#ef4444','#3b82f6','#14b8a6','#f97316'];
+let state = {
+  view: 'list',        // list | detail | dashboard
+  search: '',
+  typeFilter: 'all',   // all | proposal | seed | liked | memo
+  selectedTags: [],
+  tagMode: 'or',       // or | and
+  sort: 'rating',      // rating | name
+  currentId: null,
+  likes: {},           // id -> true
+  memos: {},           // id -> string
+};
+
+// ===== Storage =====
+function loadStorage(){
+  try{
+    const l = localStorage.getItem('ap_likes');
+    const m = localStorage.getItem('ap_memos');
+    if(l) state.likes = JSON.parse(l);
+    if(m) state.memos = JSON.parse(m);
+  }catch(e){}
+}
+function saveLikes(){ localStorage.setItem('ap_likes', JSON.stringify(state.likes)); }
+function saveMemos(){ localStorage.setItem('ap_memos', JSON.stringify(state.memos)); }
+
+// ===== Tag color map =====
+const tagColorMap = {};
+let colorIdx = 0;
+function getTagColor(tag){
+  if(!tagColorMap[tag]){ tagColorMap[tag] = TAG_COLORS[colorIdx % TAG_COLORS.length]; colorIdx++; }
+  return tagColorMap[tag];
+}
+
+// ===== Rating sort value =====
+function ratingVal(r){ return {S:4,A:3,B:2,C:1}[r]||0; }
+
+// ===== All tags =====
+function getAllTags(){
+  const s = new Set();
+  PROPOSALS_DATA.forEach(p => p.tags.forEach(t => s.add(t)));
+  return [...s];
+}
+
+// ===== Filtering & Sorting =====
+function getFiltered(){
+  let list = PROPOSALS_DATA.slice();
+  // type filter
+  if(state.typeFilter === 'proposal') list = list.filter(p => p.type === 'proposal');
+  else if(state.typeFilter === 'seed') list = list.filter(p => p.type === 'seed');
+  else if(state.typeFilter === 'liked') list = list.filter(p => state.likes[p.id]);
+  else if(state.typeFilter === 'memo') list = list.filter(p => state.memos[p.id] && state.memos[p.id].trim());
+  // search
+  if(state.search){
+    const q = state.search.toLowerCase();
+    list = list.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.logline.toLowerCase().includes(q) ||
+      p.tags.some(t => t.toLowerCase().includes(q))
+    );
+  }
+  // tag filter
+  if(state.selectedTags.length > 0){
+    if(state.tagMode === 'and'){
+      list = list.filter(p => state.selectedTags.every(t => p.tags.includes(t)));
+    } else {
+      list = list.filter(p => state.selectedTags.some(t => p.tags.includes(t)));
+    }
+  }
+  // sort
+  if(state.sort === 'rating'){
+    list.sort((a,b) => ratingVal(b.rating) - ratingVal(a.rating));
+  } else {
+    list.sort((a,b) => a.title.localeCompare(b.title,'ja'));
+  }
+  return list;
+}
+
+// ===== Simple Markdown Parser =====
+function parseMD(md){
+  if(!md) return '';
+  // table
+  const lines = md.split('\n');
+  let html = '';
+  let inTable = false;
+  let tableHeader = false;
+  let inUl = false;
+  let inOl = false;
+
+  for(let i = 0; i < lines.length; i++){
+    let line = lines[i];
+
+    // table row
+    if(line.trim().startsWith('|') && line.trim().endsWith('|')){
+      const cells = line.split('|').filter((_,idx,arr) => idx > 0 && idx < arr.length -1).map(c => c.trim());
+      // check if separator row
+      if(cells.every(c => /^[-:]+$/.test(c))){
+        tableHeader = false;
+        continue;
+      }
+      if(!inTable){
+        if(inUl){html+='</ul>';inUl=false}
+        if(inOl){html+='</ol>';inOl=false}
+        html += '<table>';
+        inTable = true;
+        tableHeader = true;
+      }
+      const tag = tableHeader ? 'th' : 'td';
+      html += '<tr>' + cells.map(c => '<'+tag+'>' + inlineFormat(c) + '</'+tag+'>').join('') + '</tr>';
+      if(tableHeader) tableHeader = false;
+      continue;
+    } else if(inTable){
+      html += '</table>';
+      inTable = false;
+    }
+
+    // headings
+    const h3 = line.match(/^### (.+)/);
+    if(h3){if(inUl){html+='</ul>';inUl=false}if(inOl){html+='</ol>';inOl=false} html+='<h3>'+inlineFormat(h3[1])+'</h3>';continue}
+    const h2 = line.match(/^## (.+)/);
+    if(h2){if(inUl){html+='</ul>';inUl=false}if(inOl){html+='</ol>';inOl=false} html+='<h2>'+inlineFormat(h2[1])+'</h2>';continue}
+    const h1 = line.match(/^# (.+)/);
+    if(h1){if(inUl){html+='</ul>';inUl=false}if(inOl){html+='</ol>';inOl=false} html+='<h1>'+inlineFormat(h1[1])+'</h1>';continue}
+
+    // unordered list
+    const ul = line.match(/^[-*] (.+)/);
+    if(ul){
+      if(inOl){html+='</ol>';inOl=false}
+      if(!inUl){html+='<ul>';inUl=true}
+      html+='<li>'+inlineFormat(ul[1])+'</li>';continue;
+    } else if(inUl){html+='</ul>';inUl=false}
+
+    // ordered list
+    const ol = line.match(/^\d+\. (.+)/);
+    if(ol){
+      if(inUl){html+='</ul>';inUl=false}
+      if(!inOl){html+='<ol>';inOl=true}
+      html+='<li>'+inlineFormat(ol[1])+'</li>';continue;
+    } else if(inOl){html+='</ol>';inOl=false}
+
+    // empty line
+    if(line.trim() === ''){continue}
+
+    // paragraph
+    html += '<p>' + inlineFormat(line) + '</p>';
+  }
+  if(inUl) html += '</ul>';
+  if(inOl) html += '</ol>';
+  if(inTable) html += '</table>';
+  return html;
+}
+
+function inlineFormat(s){
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  return s;
+}
+
+// ===== Toast =====
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+// ===== Render Functions =====
+function renderTagFilter(){
+  const container = document.getElementById('tagFilter');
+  const tags = getAllTags();
+  container.innerHTML = tags.map(tag => {
+    const c = getTagColor(tag);
+    const sel = state.selectedTags.includes(tag) ? ' selected' : '';
+    return `<button class="tag-badge${sel}" data-tag="${tag}" style="background:${c}22;color:${c}">${tag}</button>`;
+  }).join('');
+}
+
+function renderCards(){
+  const list = getFiltered();
+  const container = document.getElementById('cardList');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('resultCount').textContent = list.length + '件';
+
+  if(list.length === 0){
+    container.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  container.innerHTML = list.map((p,i) => {
+    const liked = state.likes[p.id];
+    const hasMemo = state.memos[p.id] && state.memos[p.id].trim();
+    const tagsHtml = p.tags.map(t => {
+      const c = getTagColor(t);
+      return `<span class="tag-badge" style="background:${c}22;color:${c}">${t}</span>`;
+    }).join('');
+    return `<div class="card" data-id="${p.id}" style="animation-delay:${i*0.04}s">
+      <button class="card-heart${liked?' liked':''}" data-heart="${p.id}">${liked?'&#10084;':'&#9825;'}</button>
+      ${hasMemo?'<div class="card-memo-indicator">&#128221; メモあり</div>':''}
+      <div class="card-top">
+        <div class="card-title">${p.title}</div>
+        <span class="card-type ${p.type}">${p.type==='proposal'?'企画書':'シード'}</span>
+        <span class="card-rating ${p.rating}">${p.rating}</span>
+      </div>
+      <div class="card-logline">${p.logline}</div>
+      <div class="card-footer">${tagsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDetail(id){
+  const p = PROPOSALS_DATA.find(x => x.id === id);
+  if(!p) return;
+  state.currentId = id;
+  const liked = state.likes[id];
+
+  const tagsHtml = p.tags.map(t => {
+    const c = getTagColor(t);
+    return `<span class="tag-badge" style="background:${c}22;color:${c}">${t}</span>`;
+  }).join('');
+
+  document.getElementById('detailHero').innerHTML = `
+    <div class="title">${p.title}</div>
+    <div class="meta">
+      <span class="card-type ${p.type}">${p.type==='proposal'?'企画書':'シード'}</span>
+      <span class="card-rating ${p.rating}">${p.rating}</span>
+    </div>
+    <div class="tags">${tagsHtml}</div>
+    <div class="highlight-box">
+      <div class="label">Logline</div>
+      <p>${p.logline}</p>
+    </div>
+    ${p.hook ? `<div class="highlight-box hook">
+      <div class="label">Hook</div>
+      <p>${p.hook}</p>
+    </div>` : ''}
+  `;
+
+  document.getElementById('detailActions').innerHTML = `
+    <button class="detail-action-btn like-btn${liked?' liked':''}" id="detailLikeBtn">
+      ${liked?'&#10084; ライク済':'&#9825; ライクする'}
+    </button>
+  `;
+
+  document.getElementById('memoText').value = state.memos[id] || '';
+  document.getElementById('mdContent').innerHTML = parseMD(p.content);
+  document.getElementById('headerTitle').textContent = p.title;
+}
+
+function renderDashboard(){
+  const total = PROPOSALS_DATA.length;
+  const likeCount = Object.keys(state.likes).filter(k => state.likes[k]).length;
+  const memoCount = Object.keys(state.memos).filter(k => state.memos[k] && state.memos[k].trim()).length;
+
+  document.getElementById('dashGrid').innerHTML = `
+    <div class="dash-card"><div class="num">${total}</div><div class="lbl">総企画数</div></div>
+    <div class="dash-card"><div class="num">${likeCount}</div><div class="lbl">ライク</div></div>
+    <div class="dash-card"><div class="num">${memoCount}</div><div class="lbl">メモ</div></div>
+  `;
+
+  const tagCounts = {};
+  PROPOSALS_DATA.forEach(p => p.tags.forEach(t => { tagCounts[t] = (tagCounts[t]||0)+1; }));
+  const sorted = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]);
+  const max = sorted.length > 0 ? sorted[0][1] : 1;
+
+  document.getElementById('dashTagList').innerHTML = sorted.map(([tag,cnt]) => {
+    const c = getTagColor(tag);
+    const pct = (cnt/max*100).toFixed(0);
+    return `<div class="dash-tag-row">
+      <span class="tag-name" style="color:${c}">${tag}</span>
+      <div class="dash-tag-bar"><div class="dash-tag-bar-fill" style="width:${pct}%;background:${c}"></div></div>
+      <span class="tag-count">${cnt}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===== Navigation =====
+function showView(view){
+  state.view = view;
+  document.getElementById('listView').classList.toggle('hidden', view !== 'list');
+  document.getElementById('detailView').className = view === 'detail' ? 'detail-page visible' : 'detail-page';
+  document.getElementById('dashboardView').className = view === 'dashboard' ? 'dashboard visible' : 'dashboard';
+  document.getElementById('backBtn').classList.toggle('hidden', view === 'list' || view === 'dashboard');
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.view === (view === 'detail' ? 'list' : view));
+  });
+
+  if(view === 'list'){
+    document.getElementById('headerTitle').textContent = 'Anime Pitch Reviewer';
+    renderCards();
+  } else if(view === 'dashboard'){
+    document.getElementById('headerTitle').textContent = 'ダッシュボード';
+    renderDashboard();
+  }
+  window.scrollTo(0,0);
+}
+
+// ===== Event Listeners =====
+function init(){
+  loadStorage();
+  renderTagFilter();
+  renderCards();
+
+  // Type filter chips
+  document.getElementById('typeFilter').addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if(!chip) return;
+    document.querySelectorAll('#typeFilter .filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.typeFilter = chip.dataset.type;
+    renderCards();
+  });
+
+  // Tag filter
+  document.getElementById('tagFilter').addEventListener('click', e => {
+    const badge = e.target.closest('.tag-badge');
+    if(!badge) return;
+    const tag = badge.dataset.tag;
+    const idx = state.selectedTags.indexOf(tag);
+    if(idx >= 0) state.selectedTags.splice(idx,1);
+    else state.selectedTags.push(tag);
+    renderTagFilter();
+    renderCards();
+  });
+
+  // AND/OR toggle
+  document.getElementById('andOrToggle').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    state.tagMode = btn.dataset.mode;
+    document.querySelectorAll('#andOrToggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === state.tagMode));
+    renderCards();
+  });
+
+  // Sort
+  document.getElementById('sortBtn').addEventListener('click', e => {
+    state.sort = state.sort === 'rating' ? 'name' : 'rating';
+    e.target.textContent = state.sort === 'rating' ? '評価順' : '名前順';
+    e.target.classList.toggle('active', state.sort === 'name');
+    renderCards();
+  });
+
+  // Search
+  let searchDebounce;
+  document.getElementById('searchInput').addEventListener('input', e => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(()=>{
+      state.search = e.target.value.trim();
+      renderCards();
+    }, 200);
+  });
+
+  // Card click (open detail)
+  document.getElementById('cardList').addEventListener('click', e => {
+    // heart button
+    const heart = e.target.closest('[data-heart]');
+    if(heart){
+      e.stopPropagation();
+      const id = heart.dataset.heart;
+      if(state.likes[id]){delete state.likes[id]} else {state.likes[id]=true}
+      saveLikes();
+      renderCards();
+      return;
+    }
+    const card = e.target.closest('.card');
+    if(!card) return;
+    const id = card.dataset.id;
+    renderDetail(id);
+    showView('detail');
+  });
+
+  // Back button
+  document.getElementById('backBtn').addEventListener('click', () => showView('list'));
+
+  // Detail like button
+  document.getElementById('detailActions').addEventListener('click', e => {
+    const btn = e.target.closest('.like-btn');
+    if(!btn) return;
+    const id = state.currentId;
+    if(state.likes[id]){delete state.likes[id]} else {state.likes[id]=true}
+    saveLikes();
+    renderDetail(id);
+    showToast(state.likes[id] ? 'ライクしました' : 'ライクを解除しました');
+  });
+
+  // Memo save
+  document.getElementById('memoSaveBtn').addEventListener('click', () => {
+    const val = document.getElementById('memoText').value.trim();
+    if(val) state.memos[state.currentId] = val;
+    else delete state.memos[state.currentId];
+    saveMemos();
+    showToast('メモを保存しました');
+  });
+
+  // Bottom nav
+  document.getElementById('bottomNav').addEventListener('click', e => {
+    const item = e.target.closest('.nav-item');
+    if(!item) return;
+    showView(item.dataset.view);
+  });
+
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const likedIds = Object.keys(state.likes).filter(k => state.likes[k]);
+    const likedData = PROPOSALS_DATA.filter(p => likedIds.includes(p.id));
+    const json = JSON.stringify(likedData, null, 2);
+    const blob = new Blob([json], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'liked_proposals.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('エクスポートしました');
+  });
+
+  // Handle back with history
+  window.addEventListener('popstate', () => {
+    if(state.view === 'detail') showView('list');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(function(e) {
+    console.log('SW registration failed:', e);
+  });
+}
+</script>
+</body>
+</html>
