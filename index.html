@@ -389,6 +389,37 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
   display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:#fff;flex-shrink:0;
 }
 
+/* ===== Sync Status ===== */
+.sync-bar{
+  display:flex;align-items:center;gap:6px;padding:4px 16px;
+  font-size:0.7rem;color:var(--text3);
+}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sync-dot.ok{background:var(--green)}
+.sync-dot.error{background:var(--red)}
+.sync-dot.syncing{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.sync-setup{
+  margin:16px;padding:16px;background:var(--bg2);border-radius:12px;
+  border:1px solid var(--bg4);
+}
+.sync-setup h4{font-size:0.9rem;font-weight:700;margin-bottom:10px;color:var(--accent)}
+.sync-setup p{font-size:0.8rem;color:var(--text2);line-height:1.5;margin-bottom:10px}
+.sync-setup input{
+  width:100%;padding:10px;background:var(--bg);border:1px solid var(--bg4);
+  border-radius:8px;font-size:0.85rem;color:var(--text);margin-bottom:10px;
+}
+.sync-setup input:focus{border-color:var(--accent)}
+.sync-setup .sync-save{
+  width:100%;padding:10px;border-radius:10px;font-size:0.85rem;font-weight:700;
+  background:linear-gradient(135deg,var(--green),#059669);color:#fff;
+}
+.sync-setup .sync-save:active{transform:scale(0.97)}
+.sync-setup .sync-disconnect{
+  width:100%;padding:10px;border-radius:10px;font-size:0.85rem;font-weight:700;
+  background:var(--bg3);color:var(--red);margin-top:8px;
+}
+
 /* ===== Backup Modal ===== */
 .modal-overlay{
   position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);
@@ -539,6 +570,20 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
     <div class="dash-section">
       <h3>データ管理</h3>
       <button class="export-btn" id="openBackupBtn" style="background:linear-gradient(135deg,var(--green),#059669)">&#128274; バックアップ / リストア</button>
+    </div>
+    <div class="dash-section" id="syncSection">
+      <h3>GitHub同期</h3>
+      <div class="sync-bar" id="syncStatus">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncLabel">未設定</span>
+      </div>
+      <div class="sync-setup" id="syncSetup">
+        <h4>初回設定</h4>
+        <p>GitHubのPersonal Access Token（PAT）を入力。<br>トークンはこの端末にのみ保存されます。</p>
+        <input type="password" id="syncTokenInput" placeholder="ghp_xxxxxxxxxxxx">
+        <button class="sync-save" id="syncSaveBtn">接続する</button>
+        <button class="sync-disconnect hidden" id="syncDisconnectBtn">接続解除</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1228,6 +1273,143 @@ function init(){
     }
   });
 }
+
+  // ===== GitHub Sync =====
+  const SYNC_REPO = 'studiogosso/anime-pitch-app';
+  const SYNC_FILE = 'user-data.json';
+  let syncToken = localStorage.getItem('ap_sync_token') || '';
+  let syncSha = localStorage.getItem('ap_sync_sha') || '';
+  let syncTimer = null;
+
+  function getSyncData(){
+    return {
+      version: 2,
+      syncedAt: new Date().toISOString(),
+      likes: state.likes,
+      memos: state.memos,
+      reviews: state.reviews,
+      readItems: state.readItems,
+      archivedItems: state.archivedItems,
+      ideas: state.ideas
+    };
+  }
+
+  function updateSyncUI(status, label){
+    const dot = document.getElementById('syncDot');
+    const lbl = document.getElementById('syncLabel');
+    dot.className = 'sync-dot ' + status;
+    lbl.textContent = label;
+  }
+
+  function initSyncUI(){
+    const setup = document.getElementById('syncSetup');
+    const input = document.getElementById('syncTokenInput');
+    const disconnectBtn = document.getElementById('syncDisconnectBtn');
+    if(syncToken){
+      input.value = '••••••••••';
+      disconnectBtn.classList.remove('hidden');
+      updateSyncUI('ok', '接続済み');
+    } else {
+      disconnectBtn.classList.add('hidden');
+      updateSyncUI('', '未設定');
+    }
+  }
+
+  async function syncToGitHub(){
+    if(!syncToken) return;
+    updateSyncUI('syncing', '同期中...');
+    try{
+      const data = getSyncData();
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+      const body = { message: 'sync: ' + new Date().toISOString(), content: content };
+      if(syncSha) body.sha = syncSha;
+
+      const res = await fetch('https://api.github.com/repos/' + SYNC_REPO + '/contents/' + SYNC_FILE, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + syncToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if(!res.ok){
+        const err = await res.json();
+        if(res.status === 409){
+          // SHA conflict — fetch latest and retry
+          await fetchSyncSha();
+          return syncToGitHub();
+        }
+        throw new Error(err.message || res.status);
+      }
+      const result = await res.json();
+      syncSha = result.content.sha;
+      localStorage.setItem('ap_sync_sha', syncSha);
+      updateSyncUI('ok', '同期済み ' + new Date().toLocaleTimeString());
+    }catch(e){
+      console.error('Sync error:', e);
+      updateSyncUI('error', '同期エラー: ' + e.message);
+    }
+  }
+
+  async function fetchSyncSha(){
+    try{
+      const res = await fetch('https://api.github.com/repos/' + SYNC_REPO + '/contents/' + SYNC_FILE, {
+        headers: { 'Authorization': 'Bearer ' + syncToken }
+      });
+      if(res.ok){
+        const data = await res.json();
+        syncSha = data.sha;
+        localStorage.setItem('ap_sync_sha', syncSha);
+      } else {
+        syncSha = '';
+        localStorage.removeItem('ap_sync_sha');
+      }
+    }catch(e){ syncSha = ''; }
+  }
+
+  function scheduleSyncDebounced(){
+    if(!syncToken) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncToGitHub, 3000);
+  }
+
+  // Hook save functions to auto-sync
+  const origSaveLikes = saveLikes;
+  saveLikes = function(){ origSaveLikes(); scheduleSyncDebounced(); };
+  const origSaveMemos = saveMemos;
+  saveMemos = function(){ origSaveMemos(); scheduleSyncDebounced(); };
+  const origSaveReviews = saveReviews;
+  saveReviews = function(){ origSaveReviews(); scheduleSyncDebounced(); };
+  const origSaveRead = saveRead;
+  saveRead = function(){ origSaveRead(); scheduleSyncDebounced(); };
+  const origSaveArchived = saveArchived;
+  saveArchived = function(){ origSaveArchived(); scheduleSyncDebounced(); };
+  const origSaveIdeas = saveIdeas;
+  saveIdeas = function(){ origSaveIdeas(); scheduleSyncDebounced(); };
+
+  // Sync setup UI
+  document.getElementById('syncSaveBtn').addEventListener('click', async () => {
+    const input = document.getElementById('syncTokenInput');
+    const token = input.value.trim();
+    if(!token || token === '••••••••••') return;
+    syncToken = token;
+    localStorage.setItem('ap_sync_token', syncToken);
+    await fetchSyncSha();
+    await syncToGitHub();
+    initSyncUI();
+    showToast('GitHub同期を設定しました');
+  });
+
+  document.getElementById('syncDisconnectBtn').addEventListener('click', () => {
+    syncToken = '';
+    syncSha = '';
+    localStorage.removeItem('ap_sync_token');
+    localStorage.removeItem('ap_sync_sha');
+    initSyncUI();
+    showToast('同期を解除しました');
+  });
+
+  initSyncUI();
 
   // ===== PWA Install Prompt =====
   let deferredPrompt = null;
