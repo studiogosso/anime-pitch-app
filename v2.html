@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Anime Pitch Studio</title>
+<title>Anime Pitch v2</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -595,7 +595,7 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
   <!-- Header -->
   <header class="header" id="header">
     <button class="header-back hidden" id="backBtn" aria-label="戻る">&#8592;</button>
-    <div class="header-title" id="headerTitle">Anime Pitch Studio</div>
+    <div class="header-title" id="headerTitle">Anime Pitch v2</div>
     <div class="header-right" id="headerRight"></div>
   </header>
 
@@ -1112,7 +1112,7 @@ function showView(view){
     const navView = n.dataset.view;
     n.classList.toggle('active', navView===(view==='detail'?'list':view));
   });
-  if(view==='list'){ document.getElementById('headerTitle').textContent='Anime Pitch Studio'; renderCards(); }
+  if(view==='list'){ document.getElementById('headerTitle').textContent='Anime Pitch v2'; renderCards(); }
   else if(view==='ideas'){ document.getElementById('headerTitle').textContent='アイデア帳'; renderIdeas(); }
   else if(view==='pono'){ document.getElementById('headerTitle').textContent='仮組みスタジオ'; renderPonoView(); }
   else if(view==='dashboard'){ document.getElementById('headerTitle').textContent='設定'; renderDashboard(); }
