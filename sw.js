@@ -1,10 +1,12 @@
-const CACHE_NAME = 'anime-pitch-v1';
+const CACHE_NAME = 'anime-pitch-v2';
 const ASSETS = [
   './',
   './index.html',
   './data.js',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', function(event) {
