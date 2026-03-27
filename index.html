@@ -79,6 +79,12 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 }
 .filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .filter-chip:active{transform:scale(0.95)}
+.filter-chip .badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  font-size:0.65rem;font-weight:800;background:var(--pink);color:#fff;margin-left:5px;
+}
+.filter-chip.active .badge{background:rgba(255,255,255,0.3)}
 
 /* ===== Sort / Control Bar ===== */
 .control-bar{
@@ -125,6 +131,13 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 }
 .card:active{transform:scale(0.985)}
 .card:active::before{opacity:1}
+.card.read{opacity:0.65}
+.card.read::before{display:none}
+.card.archived{display:none}
+.card .unread-dot{
+  position:absolute;top:16px;left:10px;width:8px;height:8px;
+  border-radius:50%;background:var(--accent);
+}
 @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
 .card-title{font-size:1.05rem;font-weight:700;flex:1;line-height:1.3}
@@ -191,6 +204,8 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 }
 .detail-action-btn.like-btn{background:var(--bg3);color:var(--text2)}
 .detail-action-btn.like-btn.liked{background:rgba(236,72,153,0.15);color:var(--pink)}
+.detail-action-btn.archive-btn{background:var(--bg3);color:var(--text2)}
+.detail-action-btn.archive-btn.archived{background:rgba(52,211,153,0.15);color:var(--green)}
 .detail-action-btn:active{transform:scale(0.96)}
 
 /* ===== Memo ===== */
@@ -316,6 +331,44 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ===== Ideas Page ===== */
+.ideas-page{display:none;padding:12px 16px 32px}
+.ideas-page.visible{display:block}
+.idea-input-wrap{
+  display:flex;gap:8px;margin-bottom:16px;
+}
+.idea-input-wrap textarea{
+  flex:1;padding:12px;background:var(--bg2);border:1px solid var(--bg4);
+  border-radius:12px;font-size:0.9rem;color:var(--text);resize:none;
+  min-height:48px;max-height:120px;transition:var(--transition);
+}
+.idea-input-wrap textarea:focus{border-color:var(--accent)}
+.idea-add-btn{
+  flex-shrink:0;width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
+  font-size:1.4rem;display:flex;align-items:center;justify-content:center;
+  transition:var(--transition);align-self:flex-end;
+}
+.idea-add-btn:active{transform:scale(0.9)}
+.idea-list{display:flex;flex-direction:column;gap:10px}
+.idea-card{
+  background:var(--bg2);border-radius:12px;padding:14px;
+  border:1px solid var(--bg4);position:relative;
+  animation:cardIn 0.3s ease both;
+}
+.idea-card.done{opacity:0.5}
+.idea-card .idea-text{font-size:0.9rem;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.idea-card .idea-meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.7rem;color:var(--text3)}
+.idea-card .idea-actions{display:flex;gap:6px;margin-left:auto}
+.idea-action{
+  width:30px;height:30px;border-radius:8px;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:0.85rem;
+  transition:var(--transition);
+}
+.idea-action:active{transform:scale(0.9)}
+.idea-empty{text-align:center;padding:48px 24px;color:var(--text3)}
+.idea-empty .icon{font-size:3rem;margin-bottom:12px;opacity:0.5}
+
 /* ===== Install Banner ===== */
 .install-banner{
   position:fixed;bottom:70px;left:16px;right:16px;z-index:150;
@@ -398,11 +451,13 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
     </div>
 
     <div class="filter-bar" id="typeFilter">
-      <button class="filter-chip active" data-type="all">すべて</button>
+      <button class="filter-chip active" data-type="inbox">INBOX <span class="badge hidden" id="inboxBadge">0</span></button>
+      <button class="filter-chip" data-type="all">すべて</button>
       <button class="filter-chip" data-type="proposal">企画書</button>
       <button class="filter-chip" data-type="seed">シード</button>
       <button class="filter-chip" data-type="liked">&#10084; ライク済</button>
       <button class="filter-chip" data-type="memo">&#9997; メモ付</button>
+      <button class="filter-chip" data-type="archived">&#128451; アーカイブ</button>
     </div>
 
     <div class="filter-bar" id="tagFilter"></div>
@@ -456,6 +511,19 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
     <div class="md-content" id="mdContent"></div>
   </div>
 
+  <!-- Ideas View -->
+  <div class="ideas-page" id="ideasView">
+    <div class="idea-input-wrap">
+      <textarea id="ideaInput" placeholder="新しいアイデアを入力..." rows="1"></textarea>
+      <button class="idea-add-btn" id="ideaAddBtn">+</button>
+    </div>
+    <div class="idea-list" id="ideaList"></div>
+    <div class="idea-empty hidden" id="ideaEmpty">
+      <div class="icon">&#128161;</div>
+      <p>アイデアを追加しよう</p>
+    </div>
+  </div>
+
   <!-- Dashboard View -->
   <div class="dashboard" id="dashboardView">
     <div class="dash-grid" id="dashGrid"></div>
@@ -479,11 +547,15 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 <nav class="bottom-nav" id="bottomNav">
   <button class="nav-item active" data-view="list">
     <span class="nav-icon">&#128196;</span>
-    <span>一覧</span>
+    <span>INBOX</span>
+  </button>
+  <button class="nav-item" data-view="ideas">
+    <span class="nav-icon">&#128161;</span>
+    <span>アイデア</span>
   </button>
   <button class="nav-item" data-view="dashboard">
     <span class="nav-icon">&#128202;</span>
-    <span>ダッシュボード</span>
+    <span>設定</span>
   </button>
 </nav>
 
@@ -518,9 +590,9 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 // ===== State =====
 const TAG_COLORS = ['#7c5cfc','#ec4899','#f59e0b','#10b981','#06b6d4','#8b5cf6','#ef4444','#3b82f6','#14b8a6','#f97316'];
 let state = {
-  view: 'list',        // list | detail | dashboard
+  view: 'list',        // list | detail | dashboard | ideas
   search: '',
-  typeFilter: 'all',   // all | proposal | seed | liked | memo
+  typeFilter: 'inbox', // inbox | all | proposal | seed | liked | memo | archived
   selectedTags: [],
   tagMode: 'or',       // or | and
   sort: 'rating',      // rating | name
@@ -528,6 +600,9 @@ let state = {
   likes: {},           // id -> true
   memos: {},           // id -> string
   reviews: {},         // id -> {rating, status, comment, timestamp}
+  readItems: {},       // id -> true
+  archivedItems: {},   // id -> true
+  ideas: [],           // [{id, text, createdAt, done}]
 };
 
 // ===== Storage =====
@@ -536,14 +611,23 @@ function loadStorage(){
     const l = localStorage.getItem('ap_likes');
     const m = localStorage.getItem('ap_memos');
     const r = localStorage.getItem('ap_reviews');
+    const rd = localStorage.getItem('ap_read');
+    const ar = localStorage.getItem('ap_archived');
+    const ideas = localStorage.getItem('ap_ideas');
     if(l) state.likes = JSON.parse(l);
     if(m) state.memos = JSON.parse(m);
     if(r) state.reviews = JSON.parse(r);
+    if(rd) state.readItems = JSON.parse(rd);
+    if(ar) state.archivedItems = JSON.parse(ar);
+    if(ideas) state.ideas = JSON.parse(ideas);
   }catch(e){}
 }
 function saveLikes(){ localStorage.setItem('ap_likes', JSON.stringify(state.likes)); }
 function saveMemos(){ localStorage.setItem('ap_memos', JSON.stringify(state.memos)); }
 function saveReviews(){ localStorage.setItem('ap_reviews', JSON.stringify(state.reviews)); }
+function saveRead(){ localStorage.setItem('ap_read', JSON.stringify(state.readItems)); }
+function saveArchived(){ localStorage.setItem('ap_archived', JSON.stringify(state.archivedItems)); }
+function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.ideas)); }
 
 // ===== Tag color map =====
 const tagColorMap = {};
@@ -564,11 +648,24 @@ function getAllTags(){
 }
 
 // ===== Filtering & Sorting =====
+function getUnreadCount(){
+  return PROPOSALS_DATA.filter(p => !state.readItems[p.id] && !state.archivedItems[p.id]).length;
+}
+
+function updateInboxBadge(){
+  const count = getUnreadCount();
+  const badge = document.getElementById('inboxBadge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+}
+
 function getFiltered(){
   let list = PROPOSALS_DATA.slice();
   // type filter
-  if(state.typeFilter === 'proposal') list = list.filter(p => p.type === 'proposal');
-  else if(state.typeFilter === 'seed') list = list.filter(p => p.type === 'seed');
+  if(state.typeFilter === 'inbox') list = list.filter(p => !state.archivedItems[p.id]);
+  else if(state.typeFilter === 'archived') list = list.filter(p => state.archivedItems[p.id]);
+  else if(state.typeFilter === 'proposal') list = list.filter(p => p.type === 'proposal' && !state.archivedItems[p.id]);
+  else if(state.typeFilter === 'seed') list = list.filter(p => p.type === 'seed' && !state.archivedItems[p.id]);
   else if(state.typeFilter === 'liked') list = list.filter(p => state.likes[p.id]);
   else if(state.typeFilter === 'memo') list = list.filter(p => state.memos[p.id] && state.memos[p.id].trim());
   // search
@@ -714,12 +811,14 @@ function renderCards(){
 
   container.innerHTML = list.map((p,i) => {
     const liked = state.likes[p.id];
+    const isRead = state.readItems[p.id];
     const hasMemo = state.memos[p.id] && state.memos[p.id].trim();
     const tagsHtml = p.tags.map(t => {
       const c = getTagColor(t);
       return `<span class="tag-badge" style="background:${c}22;color:${c}">${t}</span>`;
     }).join('');
-    return `<div class="card" data-id="${p.id}" style="animation-delay:${i*0.04}s">
+    return `<div class="card${isRead?' read':''}" data-id="${p.id}" style="animation-delay:${i*0.04}s">
+      ${!isRead?'<div class="unread-dot"></div>':''}
       <button class="card-heart${liked?' liked':''}" data-heart="${p.id}">${liked?'&#10084;':'&#9825;'}</button>
       ${hasMemo?'<div class="card-memo-indicator">&#128221; メモあり</div>':''}
       <div class="card-top">
@@ -731,6 +830,7 @@ function renderCards(){
       <div class="card-footer">${tagsHtml}</div>
     </div>`;
   }).join('');
+  updateInboxBadge();
 }
 
 function renderDetail(id){
@@ -761,11 +861,21 @@ function renderDetail(id){
     </div>` : ''}
   `;
 
+  const isArchived = state.archivedItems[id];
   document.getElementById('detailActions').innerHTML = `
     <button class="detail-action-btn like-btn${liked?' liked':''}" id="detailLikeBtn">
       ${liked?'&#10084; ライク済':'&#9825; ライクする'}
     </button>
+    <button class="detail-action-btn archive-btn${isArchived?' archived':''}" id="detailArchiveBtn">
+      ${isArchived?'&#9989; アーカイブ済':'&#128451; アーカイブ'}
+    </button>
   `;
+
+  // Auto mark as read
+  if(!state.readItems[id]){
+    state.readItems[id] = true;
+    saveRead();
+  }
 
   document.getElementById('memoText').value = state.memos[id] || '';
   document.getElementById('mdContent').innerHTML = parseMD(p.content);
@@ -806,8 +916,9 @@ function showView(view){
   state.view = view;
   document.getElementById('listView').classList.toggle('hidden', view !== 'list');
   document.getElementById('detailView').className = view === 'detail' ? 'detail-page visible' : 'detail-page';
+  document.getElementById('ideasView').className = view === 'ideas' ? 'ideas-page visible' : 'ideas-page';
   document.getElementById('dashboardView').className = view === 'dashboard' ? 'dashboard visible' : 'dashboard';
-  document.getElementById('backBtn').classList.toggle('hidden', view === 'list' || view === 'dashboard');
+  document.getElementById('backBtn').classList.toggle('hidden', view === 'list' || view === 'dashboard' || view === 'ideas');
 
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.toggle('active', n.dataset.view === (view === 'detail' ? 'list' : view));
@@ -816,8 +927,11 @@ function showView(view){
   if(view === 'list'){
     document.getElementById('headerTitle').textContent = 'Anime Pitch Reviewer';
     renderCards();
+  } else if(view === 'ideas'){
+    document.getElementById('headerTitle').textContent = 'アイデア帳';
+    renderIdeas();
   } else if(view === 'dashboard'){
-    document.getElementById('headerTitle').textContent = 'ダッシュボード';
+    document.getElementById('headerTitle').textContent = '設定';
     renderDashboard();
   }
   window.scrollTo(0,0);
@@ -828,6 +942,7 @@ function init(){
   loadStorage();
   renderTagFilter();
   renderCards();
+  updateInboxBadge();
 
   // Type filter chips
   document.getElementById('typeFilter').addEventListener('click', e => {
@@ -903,13 +1018,23 @@ function init(){
 
   // Detail like button
   document.getElementById('detailActions').addEventListener('click', e => {
-    const btn = e.target.closest('.like-btn');
-    if(!btn) return;
-    const id = state.currentId;
-    if(state.likes[id]){delete state.likes[id]} else {state.likes[id]=true}
-    saveLikes();
-    renderDetail(id);
-    showToast(state.likes[id] ? 'ライクしました' : 'ライクを解除しました');
+    const likeBtn = e.target.closest('.like-btn');
+    if(likeBtn){
+      const id = state.currentId;
+      if(state.likes[id]){delete state.likes[id]} else {state.likes[id]=true}
+      saveLikes();
+      renderDetail(id);
+      showToast(state.likes[id] ? 'ライクしました' : 'ライクを解除しました');
+      return;
+    }
+    const archiveBtn = e.target.closest('.archive-btn');
+    if(archiveBtn){
+      const id = state.currentId;
+      if(state.archivedItems[id]){delete state.archivedItems[id]} else {state.archivedItems[id]=true}
+      saveArchived();
+      renderDetail(id);
+      showToast(state.archivedItems[id] ? 'アーカイブしました' : 'アーカイブを解除しました');
+    }
   });
 
   // Memo save
@@ -986,6 +1111,72 @@ function init(){
     origRenderDetail(id);
     loadReviewForCurrent();
   };
+
+  // ===== Ideas System =====
+  function renderIdeas(){
+    const list = state.ideas;
+    const container = document.getElementById('ideaList');
+    const empty = document.getElementById('ideaEmpty');
+    if(list.length === 0){
+      container.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    container.innerHTML = list.map((idea,i) => `
+      <div class="idea-card${idea.done?' done':''}" data-idx="${i}">
+        <div class="idea-text">${escapeHtml(idea.text)}</div>
+        <div class="idea-meta">
+          <span>${new Date(idea.createdAt).toLocaleDateString('ja-JP')}</span>
+          <div class="idea-actions">
+            <button class="idea-action" data-idea-done="${i}" title="${idea.done?'戻す':'完了'}">${idea.done?'&#8634;':'&#10003;'}</button>
+            <button class="idea-action" data-idea-del="${i}" title="削除">&#128465;</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  document.getElementById('ideaAddBtn').addEventListener('click', () => {
+    const input = document.getElementById('ideaInput');
+    const text = input.value.trim();
+    if(!text) return;
+    state.ideas.unshift({id: Date.now().toString(), text, createdAt: new Date().toISOString(), done:false});
+    saveIdeas();
+    input.value = '';
+    renderIdeas();
+    showToast('アイデアを追加しました');
+  });
+
+  document.getElementById('ideaInput').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      document.getElementById('ideaAddBtn').click();
+    }
+  });
+
+  document.getElementById('ideaList').addEventListener('click', (e) => {
+    const doneBtn = e.target.closest('[data-idea-done]');
+    if(doneBtn){
+      const idx = parseInt(doneBtn.dataset.ideaDone);
+      state.ideas[idx].done = !state.ideas[idx].done;
+      saveIdeas();
+      renderIdeas();
+      return;
+    }
+    const delBtn = e.target.closest('[data-idea-del]');
+    if(delBtn){
+      const idx = parseInt(delBtn.dataset.ideaDel);
+      state.ideas.splice(idx, 1);
+      saveIdeas();
+      renderIdeas();
+      showToast('削除しました');
+    }
+  });
 
   // Feedback export (Claude Code用)
   document.getElementById('exportFeedbackBtn').addEventListener('click', () => {
@@ -1085,11 +1276,14 @@ function init(){
 
   document.getElementById('backupExportBtn').addEventListener('click', () => {
     const backup = {
-      version: 1,
+      version: 2,
       exportDate: new Date().toISOString(),
       likes: state.likes,
       memos: state.memos,
-      reviews: state.reviews
+      reviews: state.reviews,
+      readItems: state.readItems,
+      archivedItems: state.archivedItems,
+      ideas: state.ideas
     };
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], {type:'application/json'});
@@ -1109,14 +1303,17 @@ function init(){
     reader.onload = function(ev){
       try{
         const data = JSON.parse(ev.target.result);
-        if(!data.version || !data.likes){
+        if(!data.version){
           showToast('無効なバックアップファイルです');
           return;
         }
         state.likes = data.likes || {};
         state.memos = data.memos || {};
         state.reviews = data.reviews || {};
-        saveLikes(); saveMemos(); saveReviews();
+        state.readItems = data.readItems || {};
+        state.archivedItems = data.archivedItems || {};
+        state.ideas = data.ideas || [];
+        saveLikes(); saveMemos(); saveReviews(); saveRead(); saveArchived(); saveIdeas();
         renderCards();
         document.getElementById('backupModal').classList.add('hidden');
         showToast('バックアップを復元しました！');
