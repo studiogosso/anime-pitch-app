@@ -182,6 +182,9 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 .detail-action-btn.like-btn.liked{background:rgba(236,72,153,0.15);color:var(--pink)}
 .detail-action-btn.archive-btn{background:var(--bg3);color:var(--text2)}
 .detail-action-btn.archive-btn.archived{background:rgba(52,211,153,0.15);color:var(--green)}
+.detail-action-btn.pass-btn{background:rgba(248,113,113,0.15);color:var(--red)}
+.detail-action-btn.pass-btn.passed{background:rgba(248,113,113,0.25);color:var(--red)}
+.detail-action-btn.seed-btn{background:rgba(16,185,129,0.15);color:#10b981}
 .detail-action-btn:active{transform:scale(0.96)}
 /* NEW: Send to PONO button */
 .detail-action-btn.pono-btn{background:rgba(124,92,252,0.15);color:var(--accent)}
@@ -540,6 +543,7 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
       <button class="filter-chip" data-type="liked">&#10084; ライク済</button>
       <button class="filter-chip" data-type="memo">&#9997; メモ付</button>
       <button class="filter-chip" data-type="archived">&#128451; アーカイブ</button>
+      <button class="filter-chip" data-type="passed">&#128683; 見送り</button>
     </div>
     <div class="filter-bar" id="tagFilter"></div>
     <div class="control-bar">
@@ -740,6 +744,7 @@ let state = {
   reviews: {},
   readItems: {},
   archivedItems: {},
+  passedItems: {},
   ideas: [],
   seenHashes: {},
   prevVersions: {},
@@ -754,8 +759,8 @@ let state = {
 // ===== Storage =====
 function loadStorage(){
   try{
-    const keys = ['likes','memos','reviews','readItems','archivedItems','ideas'];
-    const storageKeys = ['ap_likes','ap_memos','ap_reviews','ap_read','ap_archived','ap_ideas'];
+    const keys = ['likes','memos','reviews','readItems','archivedItems','passedItems','ideas'];
+    const storageKeys = ['ap_likes','ap_memos','ap_reviews','ap_read','ap_archived','ap_passed','ap_ideas'];
     keys.forEach((k,i) => {
       const v = localStorage.getItem(storageKeys[i]);
       if(v) state[k] = JSON.parse(v);
@@ -773,6 +778,7 @@ function saveMemos(){ localStorage.setItem('ap_memos', JSON.stringify(state.memo
 function saveReviews(){ localStorage.setItem('ap_reviews', JSON.stringify(state.reviews)); }
 function saveRead(){ localStorage.setItem('ap_read', JSON.stringify(state.readItems)); }
 function saveArchived(){ localStorage.setItem('ap_archived', JSON.stringify(state.archivedItems)); }
+function savePassedItems(){ localStorage.setItem('ap_passed', JSON.stringify(state.passedItems)); }
 function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.ideas)); }
 function savePono(){ localStorage.setItem('ap_pono', JSON.stringify(state.pono)); }
 function saveSeenHashes(){ localStorage.setItem('ap_seen_hashes', JSON.stringify(state.seenHashes)); }
@@ -795,7 +801,7 @@ function getAllTags(){
 }
 
 function getUnreadCount(){
-  return PROPOSALS_DATA.filter(p => !state.readItems[p.id] && !state.archivedItems[p.id]).length;
+  return PROPOSALS_DATA.filter(p => !state.readItems[p.id] && !state.archivedItems[p.id] && !state.passedItems[p.id]).length;
 }
 
 function updateInboxBadge(){
@@ -868,10 +874,11 @@ window.togglePrevContent = function(){
 
 function getFiltered(){
   let list = PROPOSALS_DATA.slice();
-  if(state.typeFilter === 'inbox') list = list.filter(p => !state.archivedItems[p.id]);
+  if(state.typeFilter === 'inbox') list = list.filter(p => !state.archivedItems[p.id] && !state.passedItems[p.id]);
   else if(state.typeFilter === 'archived') list = list.filter(p => state.archivedItems[p.id]);
-  else if(state.typeFilter === 'proposal') list = list.filter(p => p.type === 'proposal' && !state.archivedItems[p.id]);
-  else if(state.typeFilter === 'seed') list = list.filter(p => p.type === 'seed' && !state.archivedItems[p.id]);
+  else if(state.typeFilter === 'passed') list = list.filter(p => state.passedItems[p.id]);
+  else if(state.typeFilter === 'proposal') list = list.filter(p => p.type === 'proposal' && !state.archivedItems[p.id] && !state.passedItems[p.id]);
+  else if(state.typeFilter === 'seed') list = list.filter(p => p.type === 'seed' && !state.archivedItems[p.id] && !state.passedItems[p.id]);
   else if(state.typeFilter === 'liked') list = list.filter(p => state.likes[p.id]);
   else if(state.typeFilter === 'memo') list = list.filter(p => state.memos[p.id] && state.memos[p.id].trim());
   if(state.search){
@@ -1037,10 +1044,14 @@ function renderDetail(id){
     ${prevContentHtml}
   `;
   const isArchived = state.archivedItems[id];
+  const isPassed = state.passedItems[id];
+  const seedBtnHtml = p.type==='seed' ? '<button class="detail-action-btn seed-btn" id="detailSeedBtn">&#128203; 企画化する</button>' : '';
   document.getElementById('detailActions').innerHTML = `
     <button class="detail-action-btn like-btn${liked?' liked':''}" id="detailLikeBtn">${liked?'&#10084; ライク済':'&#9825; ライクする'}</button>
-    <button class="detail-action-btn archive-btn${isArchived?' archived':''}" id="detailArchiveBtn">${isArchived?'&#9989; アーカイブ済':'&#128451; アーカイブ'}</button>
+    <button class="detail-action-btn archive-btn${isArchived?' archived':''}" id="detailArchiveBtn">${isArchived?'&#9989; アーカイブ済':'&#128230; アーカイブ'}</button>
+    <button class="detail-action-btn pass-btn${isPassed?' passed':''}" id="detailPassBtn">${isPassed?'&#128683; 見送り済':'&#128078; 見送り'}</button>
     <button class="detail-action-btn pono-btn" id="detailPonoBtn">&#127959; 仮組みへ</button>
+    ${seedBtnHtml}
   `;
   if(!state.readItems[id]){ state.readItems[id]=true; saveRead(); }
   document.getElementById('memoText').value = state.memos[id] || '';
@@ -1246,6 +1257,19 @@ function closeMemoModal(){
 function init(){
   loadStorage();
   checkForUpdates();
+
+  function autoSendGoToPono() {
+    let count = 0;
+    for (const [id, r] of Object.entries(state.reviews)) {
+      if (r.status === 'go' && !state.pono.sentIds.includes(id)) {
+        state.pono.sentIds.push(id);
+        count++;
+      }
+    }
+    if (count > 0) { savePono(); showToast(count + '件をGO→仮組みに追加'); }
+  }
+  autoSendGoToPono();
+
   renderTagFilter();
   renderCards();
   updateInboxBadge();
@@ -1326,6 +1350,20 @@ function init(){
       const id=state.currentId;
       if(state.archivedItems[id]){delete state.archivedItems[id]}else{state.archivedItems[id]=true}
       saveArchived(); renderDetail(id); showToast(state.archivedItems[id]?'アーカイブしました':'アーカイブを解除しました'); return;
+    }
+    const passBtn = e.target.closest('.pass-btn');
+    if(passBtn){
+      const id=state.currentId;
+      if(state.passedItems[id]){delete state.passedItems[id]}else{state.passedItems[id]=true}
+      savePassedItems(); renderDetail(id); showToast(state.passedItems[id]?'見送りにしました':'見送りを解除しました'); return;
+    }
+    const seedBtn = e.target.closest('.seed-btn');
+    if(seedBtn){
+      const id = state.currentId;
+      let reqs = JSON.parse(localStorage.getItem('ap_seed_requests')||'[]');
+      if(!reqs.includes(id)){ reqs.push(id); localStorage.setItem('ap_seed_requests', JSON.stringify(reqs)); }
+      showToast('企画化リクエストを送信しました');
+      return;
     }
     const ponoBtn = e.target.closest('.pono-btn');
     if(ponoBtn){
@@ -1561,7 +1599,7 @@ function init(){
   document.getElementById('backupCloseBtn').addEventListener('click', ()=>document.getElementById('backupModal').classList.add('hidden'));
   document.getElementById('backupModal').addEventListener('click', e=>{if(e.target.id==='backupModal')e.target.classList.add('hidden')});
   document.getElementById('backupExportBtn').addEventListener('click', () => {
-    const backup = { version:4, exportDate:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
+    const backup = { version:5, exportDate:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
     const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download='anime-pitch-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
@@ -1576,11 +1614,12 @@ function init(){
         if(!data.version){ showToast('無効なバックアップファイルです'); return; }
         state.likes=data.likes||{}; state.memos=data.memos||{}; state.reviews=data.reviews||{};
         state.readItems=data.readItems||{}; state.archivedItems=data.archivedItems||{};
+        state.passedItems=data.passedItems||{};
         state.ideas=data.ideas||[];
         if(data.pono) state.pono=Object.assign(state.pono,data.pono);
         if(data.seenHashes) state.seenHashes=data.seenHashes;
         if(data.prevVersions) state.prevVersions=data.prevVersions;
-        saveLikes();saveMemos();saveReviews();saveRead();saveArchived();saveIdeas();savePono();saveSeenHashes();savePrevVersions();
+        saveLikes();saveMemos();saveReviews();saveRead();saveArchived();savePassedItems();saveIdeas();savePono();saveSeenHashes();savePrevVersions();
         renderCards();
         document.getElementById('backupModal').classList.add('hidden');
         showToast('バックアップを復元しました！');
@@ -1597,7 +1636,7 @@ function init(){
   let syncTimer = null;
 
   function getSyncData(){
-    return { version:4, syncedAt:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
+    return { version:5, syncedAt:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
   }
   function updateSyncUI(status,label){
     document.getElementById('syncDot').className='sync-dot '+status;
@@ -1635,6 +1674,7 @@ function init(){
   const origSaveReviews=saveReviews; saveReviews=function(){origSaveReviews();scheduleSyncDebounced()};
   const origSaveRead=saveRead; saveRead=function(){origSaveRead();scheduleSyncDebounced()};
   const origSaveArchived=saveArchived; saveArchived=function(){origSaveArchived();scheduleSyncDebounced()};
+  const origSavePassedItems=savePassedItems; savePassedItems=function(){origSavePassedItems();scheduleSyncDebounced()};
   const origSaveIdeas=saveIdeas; saveIdeas=function(){origSaveIdeas();scheduleSyncDebounced()};
   const origSavePono=savePono; savePono=function(){origSavePono();scheduleSyncDebounced()};
   const origSaveSeenHashes=saveSeenHashes; saveSeenHashes=function(){origSaveSeenHashes();scheduleSyncDebounced()};
