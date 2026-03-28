@@ -866,13 +866,11 @@ let state = {
   readItems: {},
   archivedItems: {},
   ideas: [],
-  // PONO state
+  // PONO state - v2: per-project notes
   pono: {
     workingId: null,
     activeCategory: 'ideas',
-    categories: {
-      ideas: [], scenes: [], characters: [], world: [], scripts: [], assets: []
-    }
+    projects: {} // { [proposalId]: { ideas:[], scenes:[], characters:[], world:[], scripts:[], assets:[] } }
   }
 };
 
@@ -896,6 +894,25 @@ function saveRead(){ localStorage.setItem('ap_read', JSON.stringify(state.readIt
 function saveArchived(){ localStorage.setItem('ap_archived', JSON.stringify(state.archivedItems)); }
 function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.ideas)); }
 function savePono(){ localStorage.setItem('ap_pono', JSON.stringify(state.pono)); }
+// v2: get current project's categories (auto-create if missing)
+function getProjectCats(){
+  const id = state.pono.workingId;
+  if(!id) return null;
+  if(!state.pono.projects[id]) state.pono.projects[id] = { ideas:[], scenes:[], characters:[], world:[], scripts:[], assets:[] };
+  return state.pono.projects[id];
+}
+// v2: migrate old flat categories to first project (one-time)
+function migratePono(){
+  if(state.pono.categories && state.pono.workingId){
+    const hasCats = Object.values(state.pono.categories).some(a=>a.length>0);
+    if(hasCats){
+      state.pono.projects[state.pono.workingId] = state.pono.categories;
+      delete state.pono.categories;
+      savePono();
+    }
+  }
+  if(state.pono.categories) delete state.pono.categories;
+}
 
 // ===== Tag color map =====
 const tagColorMap = {};
@@ -1074,7 +1091,7 @@ function renderDashboard(){
   const likeCount = Object.keys(state.likes).filter(k=>state.likes[k]).length;
   const memoCount = Object.keys(state.memos).filter(k=>state.memos[k]&&state.memos[k].trim()).length;
   const reviewCount = Object.keys(state.reviews).filter(k=>state.reviews[k]).length;
-  const ponoCount = Object.values(state.pono.categories).reduce((s,a)=>s+a.length,0);
+  const ponoCount = Object.values(state.pono.projects).reduce((s,p)=>s+Object.values(p).reduce((s2,a)=>s2+a.length,0),0);
   document.getElementById('dashGrid').innerHTML = `
     <div class="dash-card"><div class="num">${total}</div><div class="lbl">総企画数</div></div>
     <div class="dash-card"><div class="num">${likeCount}</div><div class="lbl">ライク</div></div>
@@ -1161,7 +1178,8 @@ function renderPonoView(){
 
 function renderNotes(){
   const cat = state.pono.activeCategory;
-  const notes = state.pono.categories[cat] || [];
+  const pc = getProjectCats();
+  const notes = pc ? (pc[cat] || []) : [];
   const container = document.getElementById('noteList');
   const empty = document.getElementById('noteEmpty');
   if(notes.length===0){ container.innerHTML=''; empty.classList.remove('hidden'); return; }
@@ -1210,7 +1228,8 @@ function initNoteDragDrop(){
       const destIdx = parseInt(card.dataset.noteIdx);
       if(dragSrcIdx===null||dragSrcIdx===destIdx) return;
       const cat = state.pono.activeCategory;
-      const notes = state.pono.categories[cat];
+      const pc = getProjectCats(); if(!pc) return;
+      const notes = pc[cat];
       const [moved] = notes.splice(dragSrcIdx,1);
       notes.splice(destIdx,0,moved);
       savePono();
@@ -1232,7 +1251,8 @@ function openNoteModal(mode, idx){
   const textarea = document.getElementById('noteEditText');
   title.textContent = mode==='add' ? 'ノートを追加' : 'ノートを編集';
   if(mode==='edit'){
-    const note = state.pono.categories[state.pono.activeCategory][idx];
+    const pc = getProjectCats();
+    const note = pc ? pc[state.pono.activeCategory][idx] : null; if(!note) return;
     textarea.value = note.text;
   } else {
     textarea.value = '';
@@ -1280,8 +1300,10 @@ function openWorkSelector(){
 function importFromProposal(id){
   const p = PROPOSALS_DATA.find(x=>x.id===id);
   if(!p) return;
+  // Ensure project exists for this proposal
+  if(!state.pono.projects[id]) state.pono.projects[id] = { ideas:[], scenes:[], characters:[], world:[], scripts:[], assets:[] };
   const ts = new Date().toISOString();
-  const cats = state.pono.categories;
+  const cats = state.pono.projects[id];
   // Add logline to ideas
   cats.ideas.unshift({ id: Date.now().toString()+'_0', text: `【Logline】\n${p.logline}`, createdAt: ts });
   // Add hook to ideas
@@ -1404,6 +1426,7 @@ ${chatNoteContext}`;
 // ===== Event Listeners =====
 function init(){
   loadStorage();
+  migratePono();
   renderTagFilter();
   renderCards();
   updateInboxBadge();
@@ -1619,7 +1642,8 @@ function init(){
     const chatBtn = e.target.closest('[data-note-chat]');
     if(chatBtn){
       const idx = parseInt(chatBtn.dataset.noteChat);
-      const note = state.pono.categories[state.pono.activeCategory][idx];
+      const pc = getProjectCats(); if(!pc) return;
+      const note = pc[state.pono.activeCategory][idx];
       openChat(note.text);
       return;
     }
@@ -1631,7 +1655,8 @@ function init(){
     const delBtn = e.target.closest('[data-note-del]');
     if(delBtn){
       const idx = parseInt(delBtn.dataset.noteDel);
-      state.pono.categories[state.pono.activeCategory].splice(idx,1);
+      const pc = getProjectCats(); if(!pc) return;
+      pc[state.pono.activeCategory].splice(idx,1);
       savePono(); renderNotes(); showToast('削除しました');
     }
   });
@@ -1650,12 +1675,14 @@ function init(){
     const text = document.getElementById('noteEditText').value.trim();
     if(!text){ showToast('内容を入力してください'); return; }
     const cat = state.pono.activeCategory;
+    const pc = getProjectCats();
+    if(!pc){ showToast('企画を選択してください'); return; }
     if(noteEditMode==='add'){
-      state.pono.categories[cat].push({ id: Date.now().toString(), text, createdAt: new Date().toISOString() });
+      pc[cat].push({ id: Date.now().toString(), text, createdAt: new Date().toISOString() });
       showToast('ノートを追加しました');
     } else if(noteEditMode==='edit' && noteEditIdx!==null){
-      state.pono.categories[cat][noteEditIdx].text = text;
-      state.pono.categories[cat][noteEditIdx].updatedAt = new Date().toISOString();
+      pc[cat][noteEditIdx].text = text;
+      pc[cat][noteEditIdx].updatedAt = new Date().toISOString();
       showToast('ノートを更新しました');
     }
     savePono(); closeNoteModal(); renderNotes();
