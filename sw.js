@@ -1,4 +1,4 @@
-const CACHE_NAME = 'anime-pitch-v7';
+const CACHE_NAME = 'anime-pitch-v8';
 const ASSETS = [
   './',
   './index.html',

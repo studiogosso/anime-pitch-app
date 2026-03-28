@@ -378,64 +378,78 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 .pono-page{display:none;padding:0 0 32px}
 .pono-page.visible{display:block}
 
-/* ===== Work Selector Banner ===== */
-.pono-work-bar{
-  padding:10px 16px;display:flex;align-items:center;gap:10px;
+/* ===== PONO Project List ===== */
+.pono-project-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.pono-project-card{
+  background:var(--bg2);border-radius:var(--card-radius);padding:16px;
+  border:1px solid var(--bg4);transition:var(--transition);
+  position:relative;overflow:hidden;animation:cardIn 0.3s ease both;cursor:pointer;
+}
+.pono-project-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--pink));opacity:0;transition:var(--transition);
+}
+.pono-project-card:active{transform:scale(0.985)}
+.pono-project-card:active::before{opacity:1}
+.pono-project-card .ppc-title{font-size:1rem;font-weight:700;margin-bottom:6px}
+.pono-project-card .ppc-meta{display:flex;align-items:center;gap:10px;font-size:0.75rem;color:var(--text3)}
+.pono-project-card .ppc-memo-count{color:var(--accent);font-weight:600}
+
+/* ===== PONO Memo Header ===== */
+.pono-memo-header{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
   background:var(--bg2);border-bottom:1px solid var(--bg4);
 }
-.pono-work-info{flex:1;min-width:0}
-.pono-work-label{font-size:0.65rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}
-.pono-work-title{font-size:0.9rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pono-work-select-btn{
-  flex-shrink:0;padding:7px 14px;border-radius:10px;font-size:0.78rem;font-weight:700;
-  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
-  transition:var(--transition);
+.pono-memo-back{
+  width:32px;height:32px;border-radius:8px;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  flex-shrink:0;transition:var(--transition);
 }
-.pono-work-select-btn:active{transform:scale(0.95)}
+.pono-memo-back:active{transform:scale(0.9)}
+.pono-memo-title{flex:1;font-size:0.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ===== Category Tabs ===== */
-.category-tabs{
-  display:flex;gap:0;overflow-x:auto;scrollbar-width:none;
-  border-bottom:1px solid var(--bg4);background:var(--bg2);
+/* ===== PONO Tag Filter Chips ===== */
+.pono-tag-filter{
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--bg4);
 }
-.category-tabs::-webkit-scrollbar{display:none}
-.cat-tab{
-  flex-shrink:0;padding:10px 14px;font-size:0.75rem;font-weight:700;
-  color:var(--text3);border-bottom:2px solid transparent;
-  transition:var(--transition);white-space:nowrap;
+.pono-tag-filter::-webkit-scrollbar{display:none}
+.pono-tag-chip{
+  flex-shrink:0;padding:6px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+  border:1px solid transparent;white-space:nowrap;cursor:pointer;
 }
-.cat-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.cat-tab:active{opacity:0.7}
+.pono-tag-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pono-tag-chip:active{transform:scale(0.95)}
 
-/* ===== Note List ===== */
-.note-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:200px}
-.note-card{
+/* ===== PONO Memo List ===== */
+.pono-memo-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:200px}
+.pono-memo-card{
   background:var(--bg2);border-radius:12px;padding:12px 14px;
-  border:1px solid var(--bg4);display:flex;gap:10px;align-items:flex-start;
-  transition:var(--transition);animation:cardIn 0.25s ease both;
-  position:relative;
+  border:1px solid var(--bg4);transition:var(--transition);animation:cardIn 0.25s ease both;
 }
-.note-card.drag-over{border-color:var(--accent);background:rgba(124,92,252,0.08)}
-.note-card.dragging{opacity:0.4}
-.drag-handle{
-  flex-shrink:0;width:20px;display:flex;flex-direction:column;justify-content:center;gap:3px;
-  padding-top:3px;cursor:grab;opacity:0.4;
+.pono-memo-text{font-size:0.88rem;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.pono-memo-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.pono-memo-tag{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:8px;
+  font-size:0.68rem;font-weight:600;white-space:nowrap;
 }
-.drag-handle:active{cursor:grabbing}
-.drag-handle span{display:block;height:2px;background:var(--text3);border-radius:1px}
-.note-body{flex:1;min-width:0}
-.note-text{font-size:0.88rem;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word}
-.note-meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.68rem;color:var(--text3)}
-.note-actions{display:flex;gap:5px;margin-left:auto}
-.note-action-btn{
+.pono-memo-tag.tag-idea{background:rgba(124,92,252,0.15);color:#7c5cfc}
+.pono-memo-tag.tag-scene{background:rgba(236,72,153,0.15);color:#ec4899}
+.pono-memo-tag.tag-character{background:rgba(245,158,11,0.15);color:#f59e0b}
+.pono-memo-tag.tag-world{background:rgba(16,185,129,0.15);color:#10b981}
+.pono-memo-tag.tag-script{background:rgba(59,130,246,0.15);color:#3b82f6}
+.pono-memo-tag.tag-asset{background:rgba(107,114,128,0.15);color:#6b7280}
+.pono-memo-bottom{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.68rem;color:var(--text3)}
+.pono-memo-actions{display:flex;gap:5px;margin-left:auto}
+.pono-memo-action-btn{
   width:28px;height:28px;border-radius:7px;background:var(--bg3);
   display:flex;align-items:center;justify-content:center;font-size:0.78rem;
   transition:var(--transition);
 }
-.note-action-btn:active{transform:scale(0.88)}
-.note-action-btn.chat-btn{background:rgba(124,92,252,0.2);color:var(--accent)}
+.pono-memo-action-btn:active{transform:scale(0.88)}
 
-/* ===== FAB ===== */
+/* ===== PONO FAB ===== */
 .pono-fab{
   position:fixed;right:20px;bottom:80px;width:52px;height:52px;border-radius:50%;
   background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
@@ -446,132 +460,27 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 .pono-fab.hidden{display:none}
 .pono-fab:active{transform:scale(0.92)}
 
-/* ===== Note Edit Modal ===== */
-.note-edit-modal .modal{max-height:90vh;overflow-y:auto}
-.note-cat-select{
-  display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;
-}
-.note-cat-btn{
+/* ===== PONO Memo Edit Modal ===== */
+.memo-edit-modal .modal{max-height:90vh;overflow-y:auto}
+.memo-tag-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.memo-tag-btn{
   padding:5px 10px;border-radius:8px;font-size:0.72rem;font-weight:600;
   background:var(--bg3);color:var(--text2);border:1px solid transparent;
-  transition:var(--transition);
+  transition:var(--transition);cursor:pointer;
 }
-.note-cat-btn.active{background:rgba(124,92,252,0.2);color:var(--accent);border-color:var(--accent)}
-.note-edit-textarea{
+.memo-tag-btn.active.tag-idea{background:rgba(124,92,252,0.2);color:#7c5cfc;border-color:#7c5cfc}
+.memo-tag-btn.active.tag-scene{background:rgba(236,72,153,0.2);color:#ec4899;border-color:#ec4899}
+.memo-tag-btn.active.tag-character{background:rgba(245,158,11,0.2);color:#f59e0b;border-color:#f59e0b}
+.memo-tag-btn.active.tag-world{background:rgba(16,185,129,0.2);color:#10b981;border-color:#10b981}
+.memo-tag-btn.active.tag-script{background:rgba(59,130,246,0.2);color:#3b82f6;border-color:#3b82f6}
+.memo-tag-btn.active.tag-asset{background:rgba(107,114,128,0.2);color:#6b7280;border-color:#6b7280}
+.memo-edit-textarea{
   width:100%;min-height:120px;max-height:300px;padding:12px;
   background:var(--bg);border:1px solid var(--bg4);border-radius:10px;
   font-size:0.9rem;line-height:1.6;color:var(--text);resize:vertical;
   margin-bottom:12px;transition:var(--transition);
 }
-.note-edit-textarea:focus{border-color:var(--accent)}
-
-/* ===== Work Selector Modal ===== */
-.work-list{max-height:50vh;overflow-y:auto;margin-bottom:12px}
-.work-item{
-  display:flex;align-items:center;gap:10px;padding:12px;
-  background:var(--bg3);border-radius:10px;margin-bottom:8px;
-  border:1px solid transparent;transition:var(--transition);cursor:pointer;
-}
-.work-item:active{transform:scale(0.98)}
-.work-item.selected{border-color:var(--accent);background:rgba(124,92,252,0.1)}
-.work-item .w-rating{width:28px;height:28px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800}
-.work-item .w-rating.S{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000}
-.work-item .w-rating.A{background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff}
-.work-item .w-rating.B{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
-.work-item .w-rating.C{background:linear-gradient(135deg,#6b7280,#4b5563);color:#fff}
-.work-item .w-info{flex:1;min-width:0}
-.work-item .w-title{font-size:0.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.work-item .w-logline{font-size:0.72rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-.work-item .w-heart{font-size:0.9rem;color:var(--pink);flex-shrink:0}
-.work-import-btn{
-  width:100%;padding:12px;border-radius:10px;font-size:0.85rem;font-weight:700;
-  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
-  transition:var(--transition);margin-bottom:8px;
-}
-.work-import-btn:active{transform:scale(0.97)}
-
-/* ===== Claude Chat Drawer ===== */
-.chat-drawer{
-  position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;
-  background:var(--bg);transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
-}
-.chat-drawer.open{transform:translateY(0)}
-.chat-drawer-header{
-  display:flex;align-items:center;gap:10px;padding:14px 16px;
-  background:var(--bg2);border-bottom:1px solid var(--bg4);flex-shrink:0;
-}
-.chat-drawer-title{
-  flex:1;font-size:1rem;font-weight:700;
-  background:linear-gradient(135deg,var(--accent),var(--cyan));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-.chat-close-btn{
-  width:32px;height:32px;border-radius:8px;background:var(--bg3);
-  display:flex;align-items:center;justify-content:center;font-size:1rem;
-}
-.chat-close-btn:active{transform:scale(0.9)}
-.chat-context{
-  padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--bg4);
-  flex-shrink:0;
-}
-.chat-context-label{font-size:0.65rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
-.chat-context-text{font-size:0.8rem;color:var(--text2);line-height:1.5;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.chat-messages{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
-.chat-msg{display:flex;flex-direction:column;max-width:85%}
-.chat-msg.user{align-self:flex-end;align-items:flex-end}
-.chat-msg.assistant{align-self:flex-start;align-items:flex-start}
-.chat-bubble{
-  padding:10px 14px;border-radius:14px;font-size:0.87rem;line-height:1.6;
-}
-.chat-msg.user .chat-bubble{
-  background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;
-  border-bottom-right-radius:4px;
-}
-.chat-msg.assistant .chat-bubble{
-  background:var(--bg2);color:var(--text);border:1px solid var(--bg4);
-  border-bottom-left-radius:4px;
-}
-.chat-msg-time{font-size:0.62rem;color:var(--text3);margin-top:3px;padding:0 4px}
-.chat-thinking{
-  display:flex;gap:4px;align-items:center;padding:10px 14px;
-  background:var(--bg2);border-radius:14px;border-bottom-left-radius:4px;
-  border:1px solid var(--bg4);
-}
-.chat-thinking span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:chatPulse 1.2s ease infinite}
-.chat-thinking span:nth-child(2){animation-delay:0.2s}
-.chat-thinking span:nth-child(3){animation-delay:0.4s}
-@keyframes chatPulse{0%,80%,100%{transform:scale(0.6);opacity:0.5}40%{transform:scale(1);opacity:1}}
-.chat-input-area{
-  display:flex;gap:8px;padding:12px 16px calc(12px + var(--safe-bottom));
-  background:var(--bg2);border-top:1px solid var(--bg4);flex-shrink:0;
-}
-.chat-input{
-  flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--bg4);
-  border-radius:12px;font-size:0.9rem;color:var(--text);resize:none;
-  min-height:42px;max-height:120px;line-height:1.5;transition:var(--transition);
-}
-.chat-input:focus{border-color:var(--accent)}
-.chat-send-btn{
-  flex-shrink:0;width:42px;height:42px;border-radius:12px;
-  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
-  font-size:1rem;display:flex;align-items:center;justify-content:center;
-  transition:var(--transition);align-self:flex-end;
-}
-.chat-send-btn:active{transform:scale(0.9)}
-.chat-send-btn:disabled{opacity:0.4;pointer-events:none}
-
-/* ===== API Key Setup (in dashboard) ===== */
-.api-key-setup{margin:16px 0;padding:16px;background:var(--bg2);border-radius:12px;border:1px solid var(--bg4)}
-.api-key-setup h4{font-size:0.9rem;font-weight:700;margin-bottom:8px;color:var(--accent)}
-.api-key-setup p{font-size:0.78rem;color:var(--text2);line-height:1.5;margin-bottom:10px}
-.api-key-setup input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--bg4);border-radius:8px;font-size:0.85rem;color:var(--text);margin-bottom:10px}
-.api-key-setup input:focus{border-color:var(--accent)}
-.api-key-save{width:100%;padding:10px;border-radius:10px;font-size:0.85rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff}
-.api-key-save:active{transform:scale(0.97)}
-.api-key-status{font-size:0.75rem;margin-top:6px;text-align:center}
-.api-key-status.ok{color:var(--green)}
-.api-key-status.none{color:var(--text3)}
+.memo-edit-textarea:focus{border-color:var(--accent)}
 
 /* ===== Update Badge ===== */
 .update-badge{
@@ -694,27 +603,12 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
     </div>
   </div>
 
-  <!-- PONO View (NEW) -->
+  <!-- PONO View (仮組み) -->
   <div class="pono-page" id="ponoView">
-    <div class="pono-work-bar">
-      <div class="pono-work-info">
-        <div class="pono-work-label">作業中の企画</div>
-        <div class="pono-work-title" id="ponoWorkTitle">未選択</div>
-      </div>
-      <button class="pono-work-select-btn" id="ponoSelectWorkBtn">&#128196; 企画を選ぶ</button>
-    </div>
-    <div class="category-tabs" id="categoryTabs">
-      <button class="cat-tab active" data-cat="ideas">&#128161; アイデア</button>
-      <button class="cat-tab" data-cat="scenes">&#127916; シーン</button>
-      <button class="cat-tab" data-cat="characters">&#128100; キャラ</button>
-      <button class="cat-tab" data-cat="world">&#127759; 世界観</button>
-      <button class="cat-tab" data-cat="scripts">&#128221; 脚本</button>
-      <button class="cat-tab" data-cat="assets">&#128193; 素材</button>
-    </div>
-    <div class="note-list" id="noteList"></div>
-    <div class="empty-state hidden" id="noteEmpty">
-      <div class="icon">&#128196;</div>
-      <p>ノートを追加してみよう<br><small>右下の＋ボタンから追加</small></p>
+    <div class="pono-project-list" id="ponoProjectList"></div>
+    <div class="empty-state hidden" id="ponoEmpty">
+      <div style="font-size:3rem;opacity:0.5">&#127959;</div>
+      <p>企画の詳細画面から「仮組みへ」で追加</p>
     </div>
   </div>
 
@@ -724,16 +618,6 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
     <div class="dash-section" id="dashTags">
       <h3>タグ別企画数</h3>
       <div id="dashTagList"></div>
-    </div>
-    <div class="dash-section">
-      <h3>Claude API</h3>
-      <div class="api-key-setup">
-        <h4>&#129302; Claude APIキー</h4>
-        <p>仮組みタブのチャット機能に使用します。<br>キーはこの端末のみに保存されます。</p>
-        <input type="password" id="claudeKeyInput" placeholder="sk-ant-xxxxxxxxxxxx">
-        <button class="api-key-save" id="claudeKeySaveBtn">保存する</button>
-        <div class="api-key-status none" id="claudeKeyStatus">未設定</div>
-      </div>
     </div>
     <div class="dash-section">
       <h3>エクスポート</h3>
@@ -808,48 +692,21 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
   </div>
 </div>
 
-<!-- Note Edit Modal -->
-<div class="modal-overlay hidden note-edit-modal" id="noteEditModal">
+<!-- Memo Edit Modal -->
+<div class="modal-overlay hidden memo-edit-modal" id="memoEditModal">
   <div class="modal">
-    <h3 id="noteModalTitle">ノートを追加</h3>
-    <div class="note-cat-select" id="noteCatSelect">
-      <button class="note-cat-btn active" data-cat="ideas">&#128161; アイデア</button>
-      <button class="note-cat-btn" data-cat="scenes">&#127916; シーン</button>
-      <button class="note-cat-btn" data-cat="characters">&#128100; キャラ</button>
-      <button class="note-cat-btn" data-cat="world">&#127759; 世界観</button>
-      <button class="note-cat-btn" data-cat="scripts">&#128221; 脚本</button>
-      <button class="note-cat-btn" data-cat="assets">&#128193; 素材</button>
+    <h3 id="memoModalTitle">メモを追加</h3>
+    <div class="memo-tag-select" id="memoTagSelect">
+      <button class="memo-tag-btn tag-idea" data-tag="idea">&#128161; アイデア</button>
+      <button class="memo-tag-btn tag-scene" data-tag="scene">&#127916; シーン</button>
+      <button class="memo-tag-btn tag-character" data-tag="character">&#128100; キャラ</button>
+      <button class="memo-tag-btn tag-world" data-tag="world">&#127759; 世界観</button>
+      <button class="memo-tag-btn tag-script" data-tag="script">&#128221; 脚本</button>
+      <button class="memo-tag-btn tag-asset" data-tag="asset">&#128193; 素材</button>
     </div>
-    <textarea class="note-edit-textarea" id="noteEditText" placeholder="ノートの内容を入力..."></textarea>
-    <button class="modal-btn primary" id="noteEditSaveBtn">保存</button>
-    <button class="modal-btn danger" id="noteEditCancelBtn">キャンセル</button>
-  </div>
-</div>
-
-<!-- Work Selector Modal -->
-<div class="modal-overlay hidden" id="workSelectorModal">
-  <div class="modal">
-    <h3>&#128196; 企画を選ぶ</h3>
-    <div class="work-list" id="workList"></div>
-    <button class="work-import-btn hidden" id="workImportBtn">&#128229; 企画情報を自動取り込み</button>
-    <button class="modal-btn danger" id="workSelectorCloseBtn">閉じる</button>
-  </div>
-</div>
-
-<!-- Claude Chat Drawer -->
-<div class="chat-drawer" id="chatDrawer">
-  <div class="chat-drawer-header">
-    <div class="chat-drawer-title">&#129302; Claude対話</div>
-    <button class="chat-close-btn" id="chatCloseBtn">&#10005;</button>
-  </div>
-  <div class="chat-context" id="chatContext">
-    <div class="chat-context-label">コンテキスト</div>
-    <div class="chat-context-text" id="chatContextText">—</div>
-  </div>
-  <div class="chat-messages" id="chatMessages"></div>
-  <div class="chat-input-area">
-    <textarea class="chat-input" id="chatInput" placeholder="Claudeに質問する..." rows="1"></textarea>
-    <button class="chat-send-btn" id="chatSendBtn">&#9654;</button>
+    <textarea class="memo-edit-textarea" id="memoEditText" placeholder="メモの内容を入力..."></textarea>
+    <button class="modal-btn primary" id="memoEditSaveBtn">保存</button>
+    <button class="modal-btn danger" id="memoEditCancelBtn">キャンセル</button>
   </div>
 </div>
 
@@ -860,13 +717,13 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 
 // ===== Constants =====
 const TAG_COLORS = ['#7c5cfc','#ec4899','#f59e0b','#10b981','#06b6d4','#8b5cf6','#ef4444','#3b82f6','#14b8a6','#f97316'];
-const CAT_LABELS = {
-  ideas:      '&#128161; アイデア',
-  scenes:     '&#127916; シーン',
-  characters: '&#128100; キャラ',
-  world:      '&#127759; 世界観',
-  scripts:    '&#128221; 脚本',
-  assets:     '&#128193; 素材'
+const PONO_TAGS = {
+  idea: '\u{1F4A1} アイデア',
+  scene: '\u{1F3AC} シーン',
+  character: '\u{1F464} キャラ',
+  world: '\u{1F30F} 世界観',
+  script: '\u{1F4DD} 脚本',
+  asset: '\u{1F4C1} 素材'
 };
 
 // ===== State =====
@@ -886,11 +743,11 @@ let state = {
   ideas: [],
   seenHashes: {},
   prevVersions: {},
-  // PONO state - v2: per-project notes
+  // PONO state
   pono: {
-    workingId: null,
-    activeCategory: 'ideas',
-    projects: {} // { [proposalId]: { ideas:[], scenes:[], characters:[], world:[], scripts:[], assets:[] } }
+    sentIds: [],
+    activeId: null,
+    notes: {} // { [proposalId]: [{id, text, tags:[], createdAt, updatedAt}] }
   }
 };
 
@@ -920,25 +777,6 @@ function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.idea
 function savePono(){ localStorage.setItem('ap_pono', JSON.stringify(state.pono)); }
 function saveSeenHashes(){ localStorage.setItem('ap_seen_hashes', JSON.stringify(state.seenHashes)); }
 function savePrevVersions(){ localStorage.setItem('ap_prev_versions', JSON.stringify(state.prevVersions)); }
-// v2: get current project's categories (auto-create if missing)
-function getProjectCats(){
-  const id = state.pono.workingId;
-  if(!id) return null;
-  if(!state.pono.projects[id]) state.pono.projects[id] = { ideas:[], scenes:[], characters:[], world:[], scripts:[], assets:[] };
-  return state.pono.projects[id];
-}
-// v2: migrate old flat categories to first project (one-time)
-function migratePono(){
-  if(state.pono.categories && state.pono.workingId){
-    const hasCats = Object.values(state.pono.categories).some(a=>a.length>0);
-    if(hasCats){
-      state.pono.projects[state.pono.workingId] = state.pono.categories;
-      delete state.pono.categories;
-      savePono();
-    }
-  }
-  if(state.pono.categories) delete state.pono.categories;
-}
 
 // ===== Tag color map =====
 const tagColorMap = {};
@@ -1215,7 +1053,7 @@ function renderDashboard(){
   const likeCount = Object.keys(state.likes).filter(k=>state.likes[k]).length;
   const memoCount = Object.keys(state.memos).filter(k=>state.memos[k]&&state.memos[k].trim()).length;
   const reviewCount = Object.keys(state.reviews).filter(k=>state.reviews[k]).length;
-  const ponoCount = Object.values(state.pono.projects).reduce((s,p)=>s+Object.values(p).reduce((s2,a)=>s2+a.length,0),0);
+  const ponoCount = state.pono.sentIds.length;
   document.getElementById('dashGrid').innerHTML = `
     <div class="dash-card"><div class="num">${total}</div><div class="lbl">総企画数</div></div>
     <div class="dash-card"><div class="num">${likeCount}</div><div class="lbl">ライク</div></div>
@@ -1231,12 +1069,6 @@ function renderDashboard(){
     const c=getTagColor(tag); const pct=(cnt/max*100).toFixed(0);
     return `<div class="dash-tag-row"><span class="tag-name" style="color:${c}">${tag}</span><div class="dash-tag-bar"><div class="dash-tag-bar-fill" style="width:${pct}%;background:${c}"></div></div><span class="tag-count">${cnt}</span></div>`;
   }).join('');
-  // API key status
-  const key = localStorage.getItem('ap_claude_key') || '';
-  const input = document.getElementById('claudeKeyInput');
-  const status = document.getElementById('claudeKeyStatus');
-  if(key){ input.value='••••••••••'; status.textContent='設定済み'; status.className='api-key-status ok'; }
-  else{ status.textContent='未設定'; status.className='api-key-status none'; }
 }
 
 // ===== Navigation =====
@@ -1248,7 +1080,7 @@ function showView(view){
   document.getElementById('ponoView').className = view==='pono'?'pono-page visible':'pono-page';
   document.getElementById('dashboardView').className = view==='dashboard'?'dashboard visible':'dashboard';
   document.getElementById('backBtn').classList.toggle('hidden', !['detail'].includes(view));
-  document.getElementById('ponoFab').classList.toggle('hidden', view!=='pono');
+  document.getElementById('ponoFab').classList.toggle('hidden', !(view==='pono' && state.pono.activeId));
   document.querySelectorAll('.nav-item').forEach(n => {
     const navView = n.dataset.view;
     n.classList.toggle('active', navView===(view==='detail'?'list':view));
@@ -1285,272 +1117,134 @@ function renderIdeas(){
 // ===== PONO SYSTEM START =====
 // =============================
 
+let ponoTagFilter = 'all'; // 'all' | tag key
+
 function renderPonoView(){
-  // Work title
-  const wp = state.pono.workingId ? PROPOSALS_DATA.find(x=>x.id===state.pono.workingId) : null;
-  document.getElementById('ponoWorkTitle').textContent = wp ? wp.title : '未選択';
-  // Category tabs
-  document.querySelectorAll('.cat-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.cat===state.pono.activeCategory);
-  });
-  // Note modal default category sync
-  document.querySelectorAll('.note-cat-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.cat===state.pono.activeCategory);
-  });
-  renderNotes();
-}
+  const activeId = state.pono.activeId;
+  const ponoView = document.getElementById('ponoView');
+  // Show FAB only in memo view
+  document.getElementById('ponoFab').classList.toggle('hidden', !(state.view==='pono' && activeId));
 
-function renderNotes(){
-  const cat = state.pono.activeCategory;
-  const pc = getProjectCats();
-  const notes = pc ? (pc[cat] || []) : [];
-  const container = document.getElementById('noteList');
-  const empty = document.getElementById('noteEmpty');
-  if(notes.length===0){ container.innerHTML=''; empty.classList.remove('hidden'); return; }
-  empty.classList.add('hidden');
-  container.innerHTML = notes.map((note,i) => `
-    <div class="note-card" data-note-idx="${i}" draggable="true">
-      <div class="drag-handle"><span></span><span></span><span></span></div>
-      <div class="note-body">
-        <div class="note-text">${escapeHtml(note.text)}</div>
-        <div class="note-meta">
-          <span>${new Date(note.createdAt).toLocaleDateString('ja-JP')}</span>
-          <div class="note-actions">
-            <button class="note-action-btn chat-btn" data-note-chat="${i}" title="Claudeと対話">&#129302;</button>
-            <button class="note-action-btn" data-note-edit="${i}" title="編集">&#9998;</button>
-            <button class="note-action-btn" data-note-del="${i}" title="削除">&#128465;</button>
+  if(activeId){
+    // State B: Show project's memos
+    const p = PROPOSALS_DATA.find(x=>x.id===activeId);
+    const projectTitle = p ? p.title : activeId;
+    const notes = state.pono.notes[activeId] || [];
+    // Filter by tag
+    const filtered = ponoTagFilter==='all' ? notes : notes.filter(n => n.tags && n.tags.includes(ponoTagFilter));
+    // Tag chips
+    let tagChipsHtml = '<div class="pono-tag-filter">';
+    tagChipsHtml += `<button class="pono-tag-chip${ponoTagFilter==='all'?' active':''}" data-ptag="all">ALL</button>`;
+    for(const [key,label] of Object.entries(PONO_TAGS)){
+      tagChipsHtml += `<button class="pono-tag-chip${ponoTagFilter===key?' active':''}" data-ptag="${key}">${label}</button>`;
+    }
+    tagChipsHtml += '</div>';
+    // Memo list
+    let memosHtml = '';
+    if(filtered.length===0){
+      memosHtml = '<div class="empty-state"><div class="icon">&#128221;</div><p>メモを追加してみよう<br><small>右下の＋ボタンから追加</small></p></div>';
+    } else {
+      memosHtml = '<div class="pono-memo-list">';
+      memosHtml += filtered.map((memo,i) => {
+        const origIdx = notes.indexOf(memo);
+        const tagsHtml = (memo.tags||[]).map(t => `<span class="pono-memo-tag tag-${t}">${PONO_TAGS[t]||t}</span>`).join('');
+        const dateStr = new Date(memo.updatedAt||memo.createdAt).toLocaleDateString('ja-JP');
+        return `<div class="pono-memo-card" data-memo-idx="${origIdx}">
+          <div class="pono-memo-text">${escapeHtml(memo.text)}</div>
+          ${tagsHtml?'<div class="pono-memo-tags">'+tagsHtml+'</div>':''}
+          <div class="pono-memo-bottom">
+            <span>${dateStr}</span>
+            <div class="pono-memo-actions">
+              <button class="pono-memo-action-btn" data-memo-edit="${origIdx}" title="編集">&#9998;</button>
+              <button class="pono-memo-action-btn" data-memo-del="${origIdx}" title="削除">&#128465;</button>
+            </div>
           </div>
-        </div>
+        </div>`;
+      }).join('');
+      memosHtml += '</div>';
+    }
+    ponoView.innerHTML = `
+      <div class="pono-memo-header">
+        <button class="pono-memo-back" id="ponoBackBtn">&#8592;</button>
+        <div class="pono-memo-title">${escapeHtml(projectTitle)}</div>
       </div>
-    </div>
-  `).join('');
-  initNoteDragDrop();
+      ${tagChipsHtml}
+      ${memosHtml}
+    `;
+  } else {
+    // State A: Show project list
+    const sentIds = state.pono.sentIds;
+    if(sentIds.length===0){
+      ponoView.innerHTML = `
+        <div class="pono-project-list"></div>
+        <div class="empty-state">
+          <div style="font-size:3rem;opacity:0.5">&#127959;</div>
+          <p>企画の詳細画面から「仮組みへ」で追加</p>
+        </div>
+      `;
+      return;
+    }
+    const cardsHtml = sentIds.map((id,i) => {
+      const p = PROPOSALS_DATA.find(x=>x.id===id);
+      const title = p ? p.title : id;
+      const notes = state.pono.notes[id] || [];
+      const memoCount = notes.length;
+      const latestDate = notes.length > 0
+        ? new Date(Math.max(...notes.map(n=>new Date(n.updatedAt||n.createdAt).getTime()))).toLocaleDateString('ja-JP')
+        : '\u2014';
+      return `<div class="pono-project-card" data-pono-project="${id}" style="animation-delay:${i*0.04}s">
+        <div class="ppc-title">${escapeHtml(title)}</div>
+        <div class="ppc-meta">
+          <span class="ppc-memo-count">&#128221; ${memoCount}件のメモ</span>
+          <span>最終更新: ${latestDate}</span>
+        </div>
+      </div>`;
+    }).join('');
+    ponoView.innerHTML = `<div class="pono-project-list">${cardsHtml}</div>`;
+  }
 }
 
-// ===== Drag & Drop =====
-let dragSrcIdx = null;
-function initNoteDragDrop(){
-  const cards = document.querySelectorAll('.note-card');
-  cards.forEach(card => {
-    card.addEventListener('dragstart', e => {
-      dragSrcIdx = parseInt(card.dataset.noteIdx);
-      card.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    card.addEventListener('dragend', () => {
-      card.classList.remove('dragging');
-      document.querySelectorAll('.note-card').forEach(c => c.classList.remove('drag-over'));
-    });
-    card.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      document.querySelectorAll('.note-card').forEach(c => c.classList.remove('drag-over'));
-      card.classList.add('drag-over');
-    });
-    card.addEventListener('drop', e => {
-      e.preventDefault();
-      const destIdx = parseInt(card.dataset.noteIdx);
-      if(dragSrcIdx===null||dragSrcIdx===destIdx) return;
-      const cat = state.pono.activeCategory;
-      const pc = getProjectCats(); if(!pc) return;
-      const notes = pc[cat];
-      const [moved] = notes.splice(dragSrcIdx,1);
-      notes.splice(destIdx,0,moved);
-      savePono();
-      renderNotes();
-      dragSrcIdx = null;
-    });
-  });
-}
+// ===== Memo Edit Modal =====
+let memoEditMode = null; // 'add' | 'edit'
+let memoEditIdx = null;
+let memoEditTags = [];
 
-// ===== Note Edit Modal =====
-let noteEditMode = null; // 'add' | 'edit'
-let noteEditIdx = null;
-
-function openNoteModal(mode, idx){
-  noteEditMode = mode;
-  noteEditIdx = idx;
-  const modal = document.getElementById('noteEditModal');
-  const title = document.getElementById('noteModalTitle');
-  const textarea = document.getElementById('noteEditText');
-  title.textContent = mode==='add' ? 'ノートを追加' : 'ノートを編集';
+function openMemoModal(mode, idx){
+  memoEditMode = mode;
+  memoEditIdx = idx;
+  memoEditTags = [];
+  const modal = document.getElementById('memoEditModal');
+  const title = document.getElementById('memoModalTitle');
+  const textarea = document.getElementById('memoEditText');
+  title.textContent = mode==='add' ? 'メモを追加' : 'メモを編集';
   if(mode==='edit'){
-    const pc = getProjectCats();
-    const note = pc ? pc[state.pono.activeCategory][idx] : null; if(!note) return;
-    textarea.value = note.text;
+    const activeId = state.pono.activeId;
+    const notes = state.pono.notes[activeId] || [];
+    const memo = notes[idx]; if(!memo) return;
+    textarea.value = memo.text;
+    memoEditTags = (memo.tags||[]).slice();
   } else {
     textarea.value = '';
+    memoEditTags = [];
   }
-  // Sync category selector
-  document.querySelectorAll('.note-cat-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.cat===state.pono.activeCategory);
+  // Sync tag buttons
+  document.querySelectorAll('.memo-tag-btn').forEach(b => {
+    b.classList.toggle('active', memoEditTags.includes(b.dataset.tag));
   });
   modal.classList.remove('hidden');
   setTimeout(()=>textarea.focus(),100);
 }
 
-function closeNoteModal(){
-  document.getElementById('noteEditModal').classList.add('hidden');
-  noteEditMode = null;
-  noteEditIdx = null;
-}
-
-// ===== Work Selector Modal =====
-function openWorkSelector(){
-  const modal = document.getElementById('workSelectorModal');
-  const list = document.getElementById('workList');
-  const importBtn = document.getElementById('workImportBtn');
-  // Sort: liked first, then by rating
-  const sorted = PROPOSALS_DATA.slice().sort((a,b) => {
-    const al = state.likes[a.id]?1:0, bl = state.likes[b.id]?1:0;
-    if(al!==bl) return bl-al;
-    return ratingVal(b.rating)-ratingVal(a.rating);
-  });
-  list.innerHTML = sorted.map(p => `
-    <div class="work-item${state.pono.workingId===p.id?' selected':''}" data-work-id="${p.id}">
-      <span class="w-rating ${p.rating}">${p.rating}</span>
-      <div class="w-info">
-        <div class="w-title">${escapeHtml(p.title)}</div>
-        <div class="w-logline">${escapeHtml(p.logline)}</div>
-      </div>
-      ${state.likes[p.id]?'<span class="w-heart">&#10084;</span>':''}
-    </div>
-  `).join('');
-  importBtn.classList.toggle('hidden', !state.pono.workingId);
-  modal.classList.remove('hidden');
-}
-
-// ===== Import from proposal =====
-function importFromProposal(id){
-  const p = PROPOSALS_DATA.find(x=>x.id===id);
-  if(!p) return;
-  // Ensure project exists for this proposal
-  if(!state.pono.projects[id]) state.pono.projects[id] = { ideas:[], scenes:[], characters:[], world:[], scripts:[], assets:[] };
-  const ts = new Date().toISOString();
-  const cats = state.pono.projects[id];
-  // Add logline to ideas
-  cats.ideas.unshift({ id: Date.now().toString()+'_0', text: `【Logline】\n${p.logline}`, createdAt: ts });
-  // Add hook to ideas
-  if(p.hook) cats.ideas.unshift({ id: Date.now().toString()+'_1', text: `【Hook】\n${p.hook}`, createdAt: ts });
-  // Add tags to world
-  if(p.tags && p.tags.length) cats.world.unshift({ id: Date.now().toString()+'_2', text: `【タグ・ジャンル】\n${p.tags.join(', ')}`, createdAt: ts });
-  savePono();
-  showToast('企画情報を取り込みました');
-  document.getElementById('workSelectorModal').classList.add('hidden');
-  renderPonoView();
-}
-
-// ============================
-// ===== CLAUDE CHAT START =====
-// ============================
-let chatHistory = [];
-let chatNoteContext = '';
-let isChatSending = false;
-
-function openChat(noteText){
-  chatNoteContext = noteText;
-  document.getElementById('chatContextText').textContent = noteText;
-  document.getElementById('chatMessages').innerHTML = '';
-  chatHistory = [];
-  document.getElementById('chatDrawer').classList.add('open');
-  document.getElementById('chatInput').focus();
-}
-
-function closeChat(){
-  document.getElementById('chatDrawer').classList.remove('open');
-}
-
-function renderChatMessages(){
-  const container = document.getElementById('chatMessages');
-  container.innerHTML = chatHistory.map(msg => `
-    <div class="chat-msg ${msg.role}">
-      <div class="chat-bubble">${escapeHtml(msg.content).replace(/\n/g,'<br>')}</div>
-      <div class="chat-msg-time">${msg.time||''}</div>
-    </div>
-  `).join('');
-  container.scrollTop = container.scrollHeight;
-}
-
-function showChatThinking(){
-  const container = document.getElementById('chatMessages');
-  const el = document.createElement('div');
-  el.className = 'chat-msg assistant';
-  el.id = 'chatThinking';
-  el.innerHTML = '<div class="chat-thinking"><span></span><span></span><span></span></div>';
-  container.appendChild(el);
-  container.scrollTop = container.scrollHeight;
-}
-
-function hideChatThinking(){
-  const el = document.getElementById('chatThinking');
-  if(el) el.remove();
-}
-
-async function sendChatMessage(){
-  if(isChatSending) return;
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  const apiKey = localStorage.getItem('ap_claude_key') || '';
-  if(!apiKey){
-    showToast('Claude APIキーを設定画面で設定してください');
-    return;
-  }
-  isChatSending = true;
-  input.value = '';
-  document.getElementById('chatSendBtn').disabled = true;
-  chatHistory.push({ role:'user', content:text, time: new Date().toLocaleTimeString() });
-  renderChatMessages();
-  showChatThinking();
-  // Build messages for API
-  const systemPrompt = `あなたはアニメ・マンガ企画の開発アシスタントです。
-ユーザーが仮組み作業中の企画ノートについて質問や相談をしてきます。
-以下のコンテキスト（ノートの内容）を参考にしながら、創造的かつ具体的なアドバイスをしてください。
-日本語で回答してください。
-
-【作業中のノート】
-${chatNoteContext}`;
-  const messages = chatHistory.filter(m=>m.role!=='system').map(m=>({role:m.role, content:m.content}));
-  try{
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-ipc': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: messages
-      })
-    });
-    hideChatThinking();
-    if(!res.ok){
-      const err = await res.json().catch(()=>({error:{message:'Unknown error'}}));
-      const msg = err.error?.message || `Error ${res.status}`;
-      chatHistory.push({ role:'assistant', content:`エラー: ${msg}`, time: new Date().toLocaleTimeString() });
-    } else {
-      const data = await res.json();
-      const reply = data.content?.[0]?.text || '（応答なし）';
-      chatHistory.push({ role:'assistant', content:reply, time: new Date().toLocaleTimeString() });
-    }
-  }catch(e){
-    hideChatThinking();
-    chatHistory.push({ role:'assistant', content:`通信エラー: ${e.message}\n\nAPIキーの確認とCORS設定をご確認ください。`, time: new Date().toLocaleTimeString() });
-  }
-  renderChatMessages();
-  isChatSending = false;
-  document.getElementById('chatSendBtn').disabled = false;
-  input.focus();
+function closeMemoModal(){
+  document.getElementById('memoEditModal').classList.add('hidden');
+  memoEditMode = null;
+  memoEditIdx = null;
+  memoEditTags = [];
 }
 
 // ===== Event Listeners =====
 function init(){
   loadStorage();
-  migratePono();
   checkForUpdates();
   renderTagFilter();
   renderCards();
@@ -1635,11 +1329,13 @@ function init(){
     }
     const ponoBtn = e.target.closest('.pono-btn');
     if(ponoBtn){
-      state.pono.workingId = state.currentId;
-      savePono();
-      showToast('仮組みの企画に設定しました');
-      history.pushState({view:'pono'}, '');
-      showView('pono');
+      const id = state.currentId;
+      if(!state.pono.sentIds.includes(id)){
+        state.pono.sentIds.push(id);
+        if(!state.pono.notes[id]) state.pono.notes[id] = [];
+        savePono();
+      }
+      showToast('仮組みに追加しました');
     }
   });
 
@@ -1720,121 +1416,91 @@ function init(){
   });
 
   // ===== PONO events =====
-  // Category tabs
-  document.getElementById('categoryTabs').addEventListener('click', e => {
-    const tab = e.target.closest('.cat-tab');
-    if(!tab) return;
-    state.pono.activeCategory = tab.dataset.cat;
-    savePono();
-    renderPonoView();
-  });
-
-  // FAB - add note
+  // FAB - add memo
   document.getElementById('ponoFab').addEventListener('click', () => {
-    openNoteModal('add', null);
+    if(!state.pono.activeId) return;
+    openMemoModal('add', null);
   });
 
-  // Work selector open
-  document.getElementById('ponoSelectWorkBtn').addEventListener('click', openWorkSelector);
-
-  // Work list click
-  document.getElementById('workList').addEventListener('click', e => {
-    const item = e.target.closest('.work-item');
-    if(!item) return;
-    const id = item.dataset.workId;
-    state.pono.workingId = id;
-    savePono();
-    document.getElementById('ponoWorkTitle').textContent = PROPOSALS_DATA.find(x=>x.id===id)?.title || id;
-    document.querySelectorAll('.work-item').forEach(w=>w.classList.toggle('selected',w.dataset.workId===id));
-    document.getElementById('workImportBtn').classList.remove('hidden');
-    showToast('企画を選択しました');
-  });
-
-  // Import btn
-  document.getElementById('workImportBtn').addEventListener('click', () => {
-    if(state.pono.workingId) importFromProposal(state.pono.workingId);
-  });
-
-  document.getElementById('workSelectorCloseBtn').addEventListener('click', () => {
-    document.getElementById('workSelectorModal').classList.add('hidden');
-  });
-  document.getElementById('workSelectorModal').addEventListener('click', e => {
-    if(e.target.id==='workSelectorModal') e.target.classList.add('hidden');
-  });
-
-  // Note list events
-  document.getElementById('noteList').addEventListener('click', e => {
-    const chatBtn = e.target.closest('[data-note-chat]');
-    if(chatBtn){
-      const idx = parseInt(chatBtn.dataset.noteChat);
-      const pc = getProjectCats(); if(!pc) return;
-      const note = pc[state.pono.activeCategory][idx];
-      openChat(note.text);
+  // PONO view delegated events
+  document.getElementById('ponoView').addEventListener('click', e => {
+    // Project card click (State A → State B)
+    const projectCard = e.target.closest('[data-pono-project]');
+    if(projectCard){
+      state.pono.activeId = projectCard.dataset.ponoProject;
+      ponoTagFilter = 'all';
+      savePono();
+      renderPonoView();
       return;
     }
-    const editBtn = e.target.closest('[data-note-edit]');
+    // Back button in memo view
+    const backBtn = e.target.closest('#ponoBackBtn');
+    if(backBtn){
+      state.pono.activeId = null;
+      ponoTagFilter = 'all';
+      savePono();
+      renderPonoView();
+      return;
+    }
+    // Tag filter chips
+    const tagChip = e.target.closest('[data-ptag]');
+    if(tagChip){
+      ponoTagFilter = tagChip.dataset.ptag;
+      renderPonoView();
+      return;
+    }
+    // Memo edit button
+    const editBtn = e.target.closest('[data-memo-edit]');
     if(editBtn){
-      openNoteModal('edit', parseInt(editBtn.dataset.noteEdit));
+      openMemoModal('edit', parseInt(editBtn.dataset.memoEdit));
       return;
     }
-    const delBtn = e.target.closest('[data-note-del]');
+    // Memo delete button
+    const delBtn = e.target.closest('[data-memo-del]');
     if(delBtn){
-      const idx = parseInt(delBtn.dataset.noteDel);
-      const pc = getProjectCats(); if(!pc) return;
-      pc[state.pono.activeCategory].splice(idx,1);
-      savePono(); renderNotes(); showToast('削除しました');
+      const idx = parseInt(delBtn.dataset.memoDel);
+      const activeId = state.pono.activeId;
+      if(!activeId) return;
+      const notes = state.pono.notes[activeId] || [];
+      notes.splice(idx,1);
+      savePono(); renderPonoView(); showToast('削除しました');
+      return;
     }
   });
 
-  // Note modal category selector
-  document.getElementById('noteCatSelect').addEventListener('click', e => {
-    const btn = e.target.closest('.note-cat-btn');
+  // Memo modal tag selector (toggle)
+  document.getElementById('memoTagSelect').addEventListener('click', e => {
+    const btn = e.target.closest('.memo-tag-btn');
     if(!btn) return;
-    document.querySelectorAll('.note-cat-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    state.pono.activeCategory = btn.dataset.cat;
+    const tag = btn.dataset.tag;
+    const idx = memoEditTags.indexOf(tag);
+    if(idx>=0){ memoEditTags.splice(idx,1); btn.classList.remove('active'); }
+    else{ memoEditTags.push(tag); btn.classList.add('active'); }
   });
 
-  // Note modal save
-  document.getElementById('noteEditSaveBtn').addEventListener('click', () => {
-    const text = document.getElementById('noteEditText').value.trim();
+  // Memo modal save
+  document.getElementById('memoEditSaveBtn').addEventListener('click', () => {
+    const text = document.getElementById('memoEditText').value.trim();
     if(!text){ showToast('内容を入力してください'); return; }
-    const cat = state.pono.activeCategory;
-    const pc = getProjectCats();
-    if(!pc){ showToast('企画を選択してください'); return; }
-    if(noteEditMode==='add'){
-      pc[cat].push({ id: Date.now().toString(), text, createdAt: new Date().toISOString() });
-      showToast('ノートを追加しました');
-    } else if(noteEditMode==='edit' && noteEditIdx!==null){
-      pc[cat][noteEditIdx].text = text;
-      pc[cat][noteEditIdx].updatedAt = new Date().toISOString();
-      showToast('ノートを更新しました');
+    const activeId = state.pono.activeId;
+    if(!activeId){ showToast('企画が選択されていません'); return; }
+    if(!state.pono.notes[activeId]) state.pono.notes[activeId] = [];
+    const notes = state.pono.notes[activeId];
+    if(memoEditMode==='add'){
+      notes.push({ id: Date.now().toString(), text, tags: memoEditTags.slice(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      showToast('メモを追加しました');
+    } else if(memoEditMode==='edit' && memoEditIdx!==null){
+      notes[memoEditIdx].text = text;
+      notes[memoEditIdx].tags = memoEditTags.slice();
+      notes[memoEditIdx].updatedAt = new Date().toISOString();
+      showToast('メモを更新しました');
     }
-    savePono(); closeNoteModal(); renderNotes();
+    savePono(); closeMemoModal(); renderPonoView();
   });
 
-  document.getElementById('noteEditCancelBtn').addEventListener('click', closeNoteModal);
-  document.getElementById('noteEditModal').addEventListener('click', e => {
-    if(e.target.classList.contains('note-edit-modal')) closeNoteModal();
-  });
-
-  // Chat events
-  document.getElementById('chatCloseBtn').addEventListener('click', closeChat);
-  document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
-  document.getElementById('chatInput').addEventListener('keydown', e => {
-    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendChatMessage(); }
-  });
-
-  // Claude API key save
-  document.getElementById('claudeKeySaveBtn').addEventListener('click', () => {
-    const input = document.getElementById('claudeKeyInput');
-    const val = input.value.trim();
-    if(!val||val==='••••••••••') return;
-    localStorage.setItem('ap_claude_key', val);
-    input.value='••••••••••';
-    document.getElementById('claudeKeyStatus').textContent='設定済み';
-    document.getElementById('claudeKeyStatus').className='api-key-status ok';
-    showToast('APIキーを保存しました');
+  document.getElementById('memoEditCancelBtn').addEventListener('click', closeMemoModal);
+  document.getElementById('memoEditModal').addEventListener('click', e => {
+    if(e.target.classList.contains('memo-edit-modal')) closeMemoModal();
   });
 
   // Export
