@@ -573,6 +573,24 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 .api-key-status.ok{color:var(--green)}
 .api-key-status.none{color:var(--text3)}
 
+/* ===== Update Badge ===== */
+.update-badge{
+  position:absolute;top:12px;left:24px;
+  background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;
+  font-size:0.6rem;font-weight:800;padding:2px 6px;border-radius:4px;
+  letter-spacing:0.5px;z-index:2;
+}
+
+/* ===== Update Diff ===== */
+.update-diff{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:10px;padding:12px;margin-top:12px}
+.diff-label{font-size:0.8rem;font-weight:700;color:#ff6b6b;margin-bottom:8px}
+.diff-item{margin-bottom:8px}
+.diff-field{font-size:0.75rem;font-weight:600;color:var(--text2);display:block;margin-bottom:4px}
+.diff-old{font-size:0.82rem;color:#ff6b6b;text-decoration:line-through;opacity:0.7;margin-bottom:4px;line-height:1.5}
+.diff-new{font-size:0.82rem;color:#44dd88;line-height:1.5}
+.diff-toggle-btn{margin-top:6px;padding:6px 14px;border-radius:8px;font-size:0.78rem;font-weight:600;background:var(--bg3);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3);cursor:pointer}
+.diff-toggle-btn:active{transform:scale(0.95)}
+
 /* ===== Utilities ===== */
 .hidden{display:none!important}
 </style>
@@ -866,6 +884,8 @@ let state = {
   readItems: {},
   archivedItems: {},
   ideas: [],
+  seenHashes: {},
+  prevVersions: {},
   // PONO state - v2: per-project notes
   pono: {
     workingId: null,
@@ -885,6 +905,10 @@ function loadStorage(){
     });
     const pono = localStorage.getItem('ap_pono');
     if(pono) state.pono = Object.assign(state.pono, JSON.parse(pono));
+    const sh = localStorage.getItem('ap_seen_hashes');
+    if(sh) state.seenHashes = JSON.parse(sh);
+    const pv = localStorage.getItem('ap_prev_versions');
+    if(pv) state.prevVersions = JSON.parse(pv);
   }catch(e){}
 }
 function saveLikes(){ localStorage.setItem('ap_likes', JSON.stringify(state.likes)); }
@@ -894,6 +918,8 @@ function saveRead(){ localStorage.setItem('ap_read', JSON.stringify(state.readIt
 function saveArchived(){ localStorage.setItem('ap_archived', JSON.stringify(state.archivedItems)); }
 function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.ideas)); }
 function savePono(){ localStorage.setItem('ap_pono', JSON.stringify(state.pono)); }
+function saveSeenHashes(){ localStorage.setItem('ap_seen_hashes', JSON.stringify(state.seenHashes)); }
+function savePrevVersions(){ localStorage.setItem('ap_prev_versions', JSON.stringify(state.prevVersions)); }
 // v2: get current project's categories (auto-create if missing)
 function getProjectCats(){
   const id = state.pono.workingId;
@@ -940,6 +966,67 @@ function updateInboxBadge(){
   badge.textContent = count;
   badge.classList.toggle('hidden', count === 0);
 }
+
+// ===== Update Detection =====
+function hashProposal(p){
+  const str = (p.logline||'') + (p.hook||'') + (p.content||'') + (p.tags||[]).join(',');
+  let h = 0;
+  for(let i = 0; i < str.length; i++){ h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
+  return h.toString(36);
+}
+
+function checkForUpdates(){
+  let updatedCount = 0;
+  PROPOSALS_DATA.forEach(p => {
+    const newHash = hashProposal(p);
+    const oldHash = state.seenHashes[p.id];
+    if(oldHash && oldHash !== newHash){
+      // Content changed! Save previous version from stored snapshot
+      const prev = state.prevVersions[p.id] || {};
+      state.prevVersions[p.id] = {
+        logline: prev.logline_current || p.logline,
+        hook: prev.hook_current || p.hook,
+        content: prev.content_current || p.content,
+        savedAt: new Date().toISOString(),
+        logline_current: p.logline,
+        hook_current: p.hook,
+        content_current: p.content
+      };
+      // Mark as unread (remove from readItems)
+      delete state.readItems[p.id];
+      updatedCount++;
+    } else {
+      // No change - just update the current snapshot
+      if(!state.prevVersions[p.id]) state.prevVersions[p.id] = {};
+      state.prevVersions[p.id].logline_current = p.logline;
+      state.prevVersions[p.id].hook_current = p.hook;
+      state.prevVersions[p.id].content_current = p.content;
+    }
+    // Store current hash
+    state.seenHashes[p.id] = newHash;
+  });
+  // Always save hashes and snapshots
+  saveSeenHashes();
+  savePrevVersions();
+  if(updatedCount > 0){
+    saveRead();
+    showToast(updatedCount + '件の企画が更新されました');
+  }
+}
+
+window.togglePrevContent = function(){
+  const area = document.getElementById('prevContentArea');
+  if(!area) return;
+  if(area.classList.contains('hidden')){
+    const prev = state.prevVersions[state.currentId];
+    if(prev && prev.content){
+      document.getElementById('prevContentBody').innerHTML = parseMD(prev.content);
+    }
+    area.classList.remove('hidden');
+  } else {
+    area.classList.add('hidden');
+  }
+};
 
 function getFiltered(){
   let list = PROPOSALS_DATA.slice();
@@ -1041,9 +1128,11 @@ function renderCards(){
     const liked = state.likes[p.id];
     const isRead = state.readItems[p.id];
     const hasMemo = state.memos[p.id] && state.memos[p.id].trim();
+    const isUpdated = state.prevVersions[p.id] && state.prevVersions[p.id].savedAt && !state.readItems[p.id];
     const tagsHtml = p.tags.map(t => { const c=getTagColor(t); return `<span class="tag-badge" style="background:${c}22;color:${c}">${t}</span>`; }).join('');
     return `<div class="card${isRead?' read':''}" data-id="${p.id}" style="animation-delay:${i*0.04}s">
       ${!isRead?'<div class="unread-dot"></div>':''}
+      ${isUpdated?'<div class="update-badge">更新</div>':''}
       <button class="card-heart${liked?' liked':''}" data-heart="${p.id}">${liked?'&#10084;':'&#9825;'}</button>
       ${hasMemo?'<div class="card-memo-indicator">&#128221; メモあり</div>':''}
       <div class="card-top">
@@ -1064,6 +1153,39 @@ function renderDetail(id){
   state.currentId = id;
   const liked = state.likes[id];
   const tagsHtml = p.tags.map(t => { const c=getTagColor(t); return `<span class="tag-badge" style="background:${c}22;color:${c}">${t}</span>`; }).join('');
+  // Build diff HTML if previous version exists
+  const prev = state.prevVersions[id];
+  const hasPrev = prev && prev.savedAt;
+  let diffHtml = '';
+  if(hasPrev){
+    diffHtml = '<div class="update-diff">';
+    diffHtml += '<div class="diff-label">&#128221; 更新あり (' + new Date(prev.savedAt).toLocaleDateString('ja-JP') + ')</div>';
+    if(prev.logline && prev.logline !== p.logline){
+      diffHtml += '<div class="diff-item"><span class="diff-field">Logline変更:</span>';
+      diffHtml += '<div class="diff-old">' + escapeHtml(prev.logline) + '</div>';
+      diffHtml += '<div class="diff-new">' + escapeHtml(p.logline) + '</div></div>';
+    }
+    if(prev.hook && prev.hook !== p.hook){
+      diffHtml += '<div class="diff-item"><span class="diff-field">Hook変更:</span>';
+      diffHtml += '<div class="diff-old">' + escapeHtml(prev.hook) + '</div>';
+      diffHtml += '<div class="diff-new">' + escapeHtml(p.hook) + '</div></div>';
+    }
+    if(prev.content && prev.content !== p.content){
+      diffHtml += '<div class="diff-item"><span class="diff-field">本文が更新されています</span>';
+      diffHtml += '<button class="diff-toggle-btn" onclick="togglePrevContent()">前のバージョンを表示</button></div>';
+    }
+    diffHtml += '</div>';
+  }
+  let prevContentHtml = '';
+  if(hasPrev && prev.content && prev.content !== p.content){
+    prevContentHtml = `<div id="prevContentArea" class="hidden" style="margin:12px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:0.8rem;color:#ff6b6b;font-weight:700;">前のバージョン</span>
+        <button onclick="togglePrevContent()" style="font-size:0.75rem;color:var(--text3);background:var(--bg3);border:none;padding:4px 10px;border-radius:6px;cursor:pointer;">閉じる</button>
+      </div>
+      <div id="prevContentBody" class="md-content" style="opacity:0.7;border-left:3px solid #ff6b6b;padding-left:12px;"></div>
+    </div>`;
+  }
   document.getElementById('detailHero').innerHTML = `
     <div class="title">${escapeHtml(p.title)}</div>
     <div class="meta">
@@ -1073,6 +1195,8 @@ function renderDetail(id){
     <div class="tags">${tagsHtml}</div>
     <div class="highlight-box"><div class="label">Logline</div><p>${escapeHtml(p.logline)}</p></div>
     ${p.hook?`<div class="highlight-box hook"><div class="label">Hook</div><p>${escapeHtml(p.hook)}</p></div>`:''}
+    ${diffHtml}
+    ${prevContentHtml}
   `;
   const isArchived = state.archivedItems[id];
   document.getElementById('detailActions').innerHTML = `
@@ -1427,6 +1551,7 @@ ${chatNoteContext}`;
 function init(){
   loadStorage();
   migratePono();
+  checkForUpdates();
   renderTagFilter();
   renderCards();
   updateInboxBadge();
@@ -1770,7 +1895,7 @@ function init(){
   document.getElementById('backupCloseBtn').addEventListener('click', ()=>document.getElementById('backupModal').classList.add('hidden'));
   document.getElementById('backupModal').addEventListener('click', e=>{if(e.target.id==='backupModal')e.target.classList.add('hidden')});
   document.getElementById('backupExportBtn').addEventListener('click', () => {
-    const backup = { version:3, exportDate:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, ideas:state.ideas, pono:state.pono };
+    const backup = { version:4, exportDate:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
     const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download='anime-pitch-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
@@ -1787,7 +1912,9 @@ function init(){
         state.readItems=data.readItems||{}; state.archivedItems=data.archivedItems||{};
         state.ideas=data.ideas||[];
         if(data.pono) state.pono=Object.assign(state.pono,data.pono);
-        saveLikes();saveMemos();saveReviews();saveRead();saveArchived();saveIdeas();savePono();
+        if(data.seenHashes) state.seenHashes=data.seenHashes;
+        if(data.prevVersions) state.prevVersions=data.prevVersions;
+        saveLikes();saveMemos();saveReviews();saveRead();saveArchived();saveIdeas();savePono();saveSeenHashes();savePrevVersions();
         renderCards();
         document.getElementById('backupModal').classList.add('hidden');
         showToast('バックアップを復元しました！');
@@ -1804,7 +1931,7 @@ function init(){
   let syncTimer = null;
 
   function getSyncData(){
-    return { version:3, syncedAt:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, ideas:state.ideas, pono:state.pono };
+    return { version:4, syncedAt:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
   }
   function updateSyncUI(status,label){
     document.getElementById('syncDot').className='sync-dot '+status;
@@ -1844,6 +1971,8 @@ function init(){
   const origSaveArchived=saveArchived; saveArchived=function(){origSaveArchived();scheduleSyncDebounced()};
   const origSaveIdeas=saveIdeas; saveIdeas=function(){origSaveIdeas();scheduleSyncDebounced()};
   const origSavePono=savePono; savePono=function(){origSavePono();scheduleSyncDebounced()};
+  const origSaveSeenHashes=saveSeenHashes; saveSeenHashes=function(){origSaveSeenHashes();scheduleSyncDebounced()};
+  const origSavePrevVersions=savePrevVersions; savePrevVersions=function(){origSavePrevVersions();scheduleSyncDebounced()};
 
   document.getElementById('syncSaveBtn').addEventListener('click', async()=>{
     const input=document.getElementById('syncTokenInput'); const token=input.value.trim();
