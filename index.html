@@ -503,6 +503,17 @@ input,textarea{font:inherit;border:none;background:none;color:inherit;outline:no
 .diff-toggle-btn{margin-top:6px;padding:6px 14px;border-radius:8px;font-size:0.78rem;font-weight:600;background:var(--bg3);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3);cursor:pointer}
 .diff-toggle-btn:active{transform:scale(0.95)}
 
+/* ===== Section Feedback ===== */
+.section-fb-btn{background:none;border:none;color:var(--text3);font-size:0.75rem;cursor:pointer;padding:2px 6px;border-radius:4px;position:absolute;top:8px;right:8px}
+.section-fb-btn:hover{background:var(--bg3)}
+.fb-count{font-size:0.65rem;background:var(--accent);color:#fff;border-radius:8px;padding:0 4px;margin-left:2px}
+.section-fb-area{margin-top:8px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--bg4)}
+.fb-list{max-height:120px;overflow-y:auto;margin-bottom:6px}
+.fb-item{font-size:0.78rem;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--bg3)}
+.fb-input-row{display:flex;gap:6px}
+.fb-input{flex:1;padding:6px 10px;background:var(--bg2);border:1px solid var(--bg4);border-radius:6px;font-size:0.8rem;color:var(--text)}
+.fb-submit{padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer}
+
 /* ===== Utilities ===== */
 .hidden{display:none!important}
 </style>
@@ -748,6 +759,7 @@ let state = {
   ideas: [],
   seenHashes: {},
   prevVersions: {},
+  sectionComments: {},
   // PONO state
   pono: {
     sentIds: [],
@@ -765,6 +777,8 @@ function loadStorage(){
       const v = localStorage.getItem(storageKeys[i]);
       if(v) state[k] = JSON.parse(v);
     });
+    const sc = localStorage.getItem('ap_section_comments');
+    if(sc) state.sectionComments = JSON.parse(sc);
     const pono = localStorage.getItem('ap_pono');
     if(pono) state.pono = Object.assign(state.pono, JSON.parse(pono));
     const sh = localStorage.getItem('ap_seen_hashes');
@@ -783,6 +797,7 @@ function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.idea
 function savePono(){ localStorage.setItem('ap_pono', JSON.stringify(state.pono)); }
 function saveSeenHashes(){ localStorage.setItem('ap_seen_hashes', JSON.stringify(state.seenHashes)); }
 function savePrevVersions(){ localStorage.setItem('ap_prev_versions', JSON.stringify(state.prevVersions)); }
+function saveSectionComments(){ localStorage.setItem('ap_section_comments', JSON.stringify(state.sectionComments)); }
 
 // ===== Tag color map =====
 const tagColorMap = {};
@@ -836,8 +851,10 @@ function checkForUpdates(){
         hook_current: p.hook,
         content_current: p.content
       };
-      // Mark as unread (remove from readItems)
+      // Mark as unread and un-archive/un-pass so it appears in INBOX
       delete state.readItems[p.id];
+      delete state.archivedItems[p.id];
+      delete state.passedItems[p.id];
       updatedCount++;
     } else {
       // No change - just update the current snapshot
@@ -853,7 +870,7 @@ function checkForUpdates(){
   saveSeenHashes();
   savePrevVersions();
   if(updatedCount > 0){
-    saveRead();
+    saveSeenHashes(); savePrevVersions(); saveRead(); saveArchived(); savePassedItems();
     showToast(updatedCount + '件の企画が更新されました');
   }
 }
@@ -870,6 +887,51 @@ window.togglePrevContent = function(){
   } else {
     area.classList.add('hidden');
   }
+};
+
+// ===== Section Feedback =====
+function getSectionFBCount(key){
+  return (state.sectionComments[key]||[]).length;
+}
+function renderSectionFBArea(key){
+  const comments = state.sectionComments[key]||[];
+  let listHtml = comments.map(c => `<div class="fb-item">${escapeHtml(c.text)} <span style="font-size:0.65rem;color:var(--text3);margin-left:6px">${new Date(c.date).toLocaleDateString('ja-JP')}</span></div>`).join('');
+  return `<div class="section-fb-area hidden" id="fb_${key}">
+    <div class="fb-list">${listHtml}</div>
+    <div class="fb-input-row">
+      <input type="text" placeholder="\u30b3\u30e1\u30f3\u30c8..." class="fb-input" id="fb_input_${key}">
+      <button class="fb-submit" onclick="submitSectionFB('${key}')">\u9001\u4fe1</button>
+    </div>
+  </div>`;
+}
+window.toggleSectionFB = function(key){
+  const area = document.getElementById('fb_'+key);
+  if(!area) return;
+  area.classList.toggle('hidden');
+  if(!area.classList.contains('hidden')){
+    const input = document.getElementById('fb_input_'+key);
+    if(input) setTimeout(()=>input.focus(),50);
+  }
+};
+window.submitSectionFB = function(key){
+  const input = document.getElementById('fb_input_'+key);
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text) return;
+  if(!state.sectionComments[key]) state.sectionComments[key] = [];
+  state.sectionComments[key].push({text, date:new Date().toISOString()});
+  saveSectionComments();
+  input.value='';
+  // Re-render the feedback area
+  const area = document.getElementById('fb_'+key);
+  const listEl = area.querySelector('.fb-list');
+  const comments = state.sectionComments[key];
+  listEl.innerHTML = comments.map(c => `<div class="fb-item">${escapeHtml(c.text)} <span style="font-size:0.65rem;color:var(--text3);margin-left:6px">${new Date(c.date).toLocaleDateString('ja-JP')}</span></div>`).join('');
+  listEl.scrollTop = listEl.scrollHeight;
+  // Update count badge
+  const countEl = document.querySelector(`[data-fb-key="${key}"] .fb-count`);
+  if(countEl){ const cnt = comments.length; countEl.textContent = cnt; countEl.style.display = cnt>0?'inline':'none'; }
+  showToast('\u30b3\u30e1\u30f3\u30c8\u3092\u8ffd\u52a0\u3057\u307e\u3057\u305f');
 };
 
 function getFiltered(){
@@ -1038,8 +1100,16 @@ function renderDetail(id){
       <span class="card-rating ${p.rating}">${p.rating}</span>
     </div>
     <div class="tags">${tagsHtml}</div>
-    <div class="highlight-box"><div class="label">Logline</div><p>${escapeHtml(p.logline)}</p></div>
-    ${p.hook?`<div class="highlight-box hook"><div class="label">Hook</div><p>${escapeHtml(p.hook)}</p></div>`:''}
+    <div class="highlight-box" style="position:relative">
+      <div class="label">Logline</div><p>${escapeHtml(p.logline)}</p>
+      <button class="section-fb-btn" data-fb-key="${p.id}_logline" onclick="toggleSectionFB('${p.id}_logline')">\u{1F4AC} <span class="fb-count" style="${getSectionFBCount(p.id+'_logline')>0?'':'display:none'}">${getSectionFBCount(p.id+'_logline')}</span></button>
+      ${renderSectionFBArea(p.id+'_logline')}
+    </div>
+    ${p.hook?`<div class="highlight-box hook" style="position:relative">
+      <div class="label">Hook</div><p>${escapeHtml(p.hook)}</p>
+      <button class="section-fb-btn" data-fb-key="${p.id}_hook" onclick="toggleSectionFB('${p.id}_hook')">\u{1F4AC} <span class="fb-count" style="${getSectionFBCount(p.id+'_hook')>0?'':'display:none'}">${getSectionFBCount(p.id+'_hook')}</span></button>
+      ${renderSectionFBArea(p.id+'_hook')}
+    </div>`:''}
     ${diffHtml}
     ${prevContentHtml}
   `;
@@ -1055,7 +1125,13 @@ function renderDetail(id){
   `;
   if(!state.readItems[id]){ state.readItems[id]=true; saveRead(); }
   document.getElementById('memoText').value = state.memos[id] || '';
-  document.getElementById('mdContent').innerHTML = parseMD(p.content);
+  const contentKey = p.id + '_content';
+  const contentFBHtml = `<div style="position:relative;margin:0 16px 16px">
+    <button class="section-fb-btn" data-fb-key="${contentKey}" onclick="toggleSectionFB('${contentKey}')" style="position:relative;top:auto;right:auto;float:right">\u{1F4AC} <span class="fb-count" style="${getSectionFBCount(contentKey)>0?'':'display:none'}">${getSectionFBCount(contentKey)}</span></button>
+    <div style="clear:both"></div>
+    ${renderSectionFBArea(contentKey)}
+  </div>`;
+  document.getElementById('mdContent').innerHTML = parseMD(p.content) + contentFBHtml;
   document.getElementById('headerTitle').textContent = p.title;
 }
 
@@ -1177,7 +1253,7 @@ function renderPonoView(){
     ponoView.innerHTML = `
       <div class="pono-memo-header">
         <button class="pono-memo-back" id="ponoBackBtn">&#8592;</button>
-        <div class="pono-memo-title">${escapeHtml(projectTitle)}</div>
+        <div class="pono-memo-title" data-pono-goto-detail="${activeId}" style="cursor:pointer;text-decoration:underline">${escapeHtml(projectTitle)}</div>
       </div>
       ${tagChipsHtml}
       ${memosHtml}
@@ -1480,6 +1556,14 @@ function init(){
       renderPonoView();
       return;
     }
+    // Title click -> go to detail
+    const titleLink = e.target.closest('[data-pono-goto-detail]');
+    if(titleLink){
+      const detailId = titleLink.dataset.ponoGotoDetail;
+      renderDetail(detailId);
+      showView('detail');
+      return;
+    }
     // Tag filter chips
     const tagChip = e.target.closest('[data-ptag]');
     if(tagChip){
@@ -1599,7 +1683,7 @@ function init(){
   document.getElementById('backupCloseBtn').addEventListener('click', ()=>document.getElementById('backupModal').classList.add('hidden'));
   document.getElementById('backupModal').addEventListener('click', e=>{if(e.target.id==='backupModal')e.target.classList.add('hidden')});
   document.getElementById('backupExportBtn').addEventListener('click', () => {
-    const backup = { version:5, exportDate:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
+    const backup = { version:6, exportDate:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions, sectionComments:state.sectionComments };
     const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download='anime-pitch-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
@@ -1619,7 +1703,8 @@ function init(){
         if(data.pono) state.pono=Object.assign(state.pono,data.pono);
         if(data.seenHashes) state.seenHashes=data.seenHashes;
         if(data.prevVersions) state.prevVersions=data.prevVersions;
-        saveLikes();saveMemos();saveReviews();saveRead();saveArchived();savePassedItems();saveIdeas();savePono();saveSeenHashes();savePrevVersions();
+        if(data.sectionComments) state.sectionComments=data.sectionComments;
+        saveLikes();saveMemos();saveReviews();saveRead();saveArchived();savePassedItems();saveIdeas();savePono();saveSeenHashes();savePrevVersions();saveSectionComments();
         renderCards();
         document.getElementById('backupModal').classList.add('hidden');
         showToast('バックアップを復元しました！');
@@ -1636,7 +1721,7 @@ function init(){
   let syncTimer = null;
 
   function getSyncData(){
-    return { version:5, syncedAt:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions };
+    return { version:6, syncedAt:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions, sectionComments:state.sectionComments };
   }
   function updateSyncUI(status,label){
     document.getElementById('syncDot').className='sync-dot '+status;
@@ -1679,6 +1764,7 @@ function init(){
   const origSavePono=savePono; savePono=function(){origSavePono();scheduleSyncDebounced()};
   const origSaveSeenHashes=saveSeenHashes; saveSeenHashes=function(){origSaveSeenHashes();scheduleSyncDebounced()};
   const origSavePrevVersions=savePrevVersions; savePrevVersions=function(){origSavePrevVersions();scheduleSyncDebounced()};
+  const origSaveSectionComments=saveSectionComments; saveSectionComments=function(){origSaveSectionComments();scheduleSyncDebounced()};
 
   document.getElementById('syncSaveBtn').addEventListener('click', async()=>{
     const input=document.getElementById('syncTokenInput'); const token=input.value.trim();
