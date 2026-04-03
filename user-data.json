@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-03T17:28:40.163Z",
+  "syncedAt": "2026-04-03T17:29:06.473Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -115,7 +115,8 @@
     "N06_recent_bestsellers_13": true,
     "V03_contrast_silhouette_2": true,
     "V03_contrast_silhouette_3": true,
-    "DEEP_RESONANCE": true
+    "DEEP_RESONANCE": true,
+    "TSUKUMONOGATARI": true
   },
   "archivedItems": {
     "GRAND_ILLUSION": true,
@@ -134,7 +135,8 @@
   "passedItems": {
     "MEMORIA_LIBRARY": true,
     "GRAND_ILLUSION": true,
-    "V02_cultural_style_3": true
+    "V02_cultural_style_3": true,
+    "DEEP_RESONANCE": true
   },
   "ideas": [],
   "pono": {
