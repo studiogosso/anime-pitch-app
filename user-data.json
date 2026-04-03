@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-03T17:29:06.473Z",
+  "syncedAt": "2026-04-03T17:29:51.817Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -30,8 +30,11 @@
     "TSUKUMONOGATARI": {
       "rating": 1,
       "status": "rework",
-      "comment": "",
-      "timestamp": "2026-03-27T16:23:19.575Z"
+      "comment": "【提案】妖怪ネタでガラッと変えたもの5パターン出して",
+      "timestamp": "2026-04-03T17:29:47.465Z",
+      "strengths": "",
+      "weaknesses": "",
+      "suggestions": "妖怪ネタでガラッと変えたもの5パターン出して"
     },
     "WISHGROUND": {
       "rating": 2,
@@ -116,7 +119,8 @@
     "V03_contrast_silhouette_2": true,
     "V03_contrast_silhouette_3": true,
     "DEEP_RESONANCE": true,
-    "TSUKUMONOGATARI": true
+    "TSUKUMONOGATARI": true,
+    "WISHGROUND": true
   },
   "archivedItems": {
     "GRAND_ILLUSION": true,
