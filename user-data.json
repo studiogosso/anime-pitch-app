@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-03T17:30:37.076Z",
+  "syncedAt": "2026-04-03T17:30:50.292Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -138,7 +138,8 @@
     "V01_light_color_4": true,
     "V01_light_color_5": true,
     "V02_cultural_style_2": true,
-    "WISHGROUND": true
+    "WISHGROUND": true,
+    "TSUKUMONOGATARI": true
   },
   "passedItems": {
     "MEMORIA_LIBRARY": true,
