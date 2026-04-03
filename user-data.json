@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-03T17:34:27.987Z",
+  "syncedAt": "2026-04-03T19:43:22.368Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -53,7 +53,7 @@
     },
     "ARABIAN_NIGHTS": {
       "rating": 2,
-      "status": "rework",
+      "status": "go",
       "comment": "めっちゃ面白そう。詳細な原作の要約欲しいな",
       "timestamp": "2026-03-27T16:52:07.962Z"
     },
@@ -125,7 +125,8 @@
     "TSUKUMONOGATARI": true,
     "WISHGROUND": true,
     "ANANSI": true,
-    "ARABIAN_NIGHTS": true
+    "ARABIAN_NIGHTS": true,
+    "WEE_FREE_MEN": true
   },
   "archivedItems": {
     "GRAND_ILLUSION": true,
@@ -142,7 +143,8 @@
     "V02_cultural_style_2": true,
     "WISHGROUND": true,
     "TSUKUMONOGATARI": true,
-    "ANANSI": true
+    "ANANSI": true,
+    "ARABIAN_NIGHTS": true
   },
   "passedItems": {
     "MEMORIA_LIBRARY": true,
