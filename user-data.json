@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-03T17:29:51.817Z",
+  "syncedAt": "2026-04-03T17:30:30.349Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -39,8 +39,11 @@
     "WISHGROUND": {
       "rating": 2,
       "status": "rework",
-      "comment": "これも期待感あります",
-      "timestamp": "2026-03-27T16:23:38.525Z"
+      "comment": "【提案】ガラッと変えたもの5パターンだして",
+      "timestamp": "2026-04-03T17:30:24.582Z",
+      "strengths": "",
+      "weaknesses": "",
+      "suggestions": "ガラッと変えたもの5パターンだして"
     },
     "ANANSI": {
       "rating": 1,
@@ -134,7 +137,8 @@
     "V01_light_color_3": true,
     "V01_light_color_4": true,
     "V01_light_color_5": true,
-    "V02_cultural_style_2": true
+    "V02_cultural_style_2": true,
+    "WISHGROUND": true
   },
   "passedItems": {
     "MEMORIA_LIBRARY": true,
