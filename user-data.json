@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-06T23:04:33.320Z",
+  "syncedAt": "2026-04-06T23:04:44.993Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -135,7 +135,10 @@
     "WEE_FREE_MEN": true,
     "V02_cultural_style_1": true,
     "N06_recent_bestsellers_12": true,
-    "ADAPT_FRIEREN": true
+    "ADAPT_FRIEREN": true,
+    "ADAPT_HOUSEKI_NO_KUNI": true,
+    "ADAPT_THREE_BODY": true,
+    "ADAPT_MADE_IN_ABYSS": true
   },
   "archivedItems": {
     "GRAND_ILLUSION": true,
