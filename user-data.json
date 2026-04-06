@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-06T23:05:59.939Z",
+  "syncedAt": "2026-04-06T23:08:15.154Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -143,7 +143,11 @@
     "ADAPT_NIER": true,
     "ADAPT_HAIL_MARY": true,
     "ADAPT_NAUSICAA_MANGA": true,
-    "ADAPT_MUSHISHI": true
+    "ADAPT_MUSHISHI": true,
+    "V03_contrast_silhouette_4": true,
+    "V03_contrast_silhouette_5": true,
+    "S01_physics_rules_1": true,
+    "S01_physics_rules_2": true
   },
   "archivedItems": {
     "GRAND_ILLUSION": true,
