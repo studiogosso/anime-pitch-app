@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "syncedAt": "2026-04-06T23:17:00.332Z",
+  "syncedAt": "2026-04-06T23:17:08.333Z",
   "likes": {
     "DEEP_RESONANCE": true,
     "SHITATEYA": true,
@@ -135,6 +135,9 @@
       "status": "pass"
     },
     "ADAPT_NAUSICAA_MANGA": {
+      "status": "pass"
+    },
+    "ADAPT_MUSHISHI": {
       "status": "pass"
     }
   },
