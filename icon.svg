@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0d0d14"/>
+  <!-- Clapperboard body -->
+  <rect x="80" y="220" width="352" height="210" rx="18" fill="#1e1e32" stroke="#7c5cfc" stroke-width="6"/>
+  <!-- Clapperboard top (hinged part) -->
+  <polygon points="80,220 120,130 432,130 432,220" fill="#282845" stroke="#7c5cfc" stroke-width="6" stroke-linejoin="round"/>
+  <!-- Diagonal stripes on top -->
+  <line x1="170" y1="130" x2="200" y2="220" stroke="#7c5cfc" stroke-width="5"/>
+  <line x1="240" y1="130" x2="270" y2="220" stroke="#7c5cfc" stroke-width="5"/>
+  <line x1="310" y1="130" x2="340" y2="220" stroke="#7c5cfc" stroke-width="5"/>
+  <line x1="380" y1="130" x2="410" y2="220" stroke="#7c5cfc" stroke-width="5"/>
+  <!-- Play triangle -->
+  <polygon points="220,290 220,390 320,340" fill="#ec4899" opacity="0.9"/>
+  <!-- Small star accents -->
+  <circle cx="130" cy="310" r="5" fill="#a855f7" opacity="0.6"/>
+  <circle cx="390" cy="370" r="4" fill="#6366f1" opacity="0.6"/>
+  <circle cx="370" cy="280" r="3" fill="#ec4899" opacity="0.5"/>
+</svg>

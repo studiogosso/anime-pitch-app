@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Anime Pitch Studio</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d14;--bg2:#161625;--bg3:#1e1e32;--bg4:#282845;
+  --text:#e8e8f0;--text2:#a0a0b8;--text3:#6a6a82;
+  --accent:#7c5cfc;--accent2:#a855f7;--accent3:#6366f1;
+  --pink:#ec4899;--pink2:#f472b6;
+  --green:#34d399;--yellow:#fbbf24;--red:#f87171;--cyan:#22d3ee;
+  --card-radius:14px;--transition:0.25s ease;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:15px;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;
+  overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;border:none;background:none;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,textarea{font:inherit;border:none;background:none;color:inherit;outline:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+
+/* ===== Header ===== */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(13,13,20,0.92);backdrop-filter:blur(12px);
+  padding:12px 16px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(124,92,252,0.15);
+}
+.header-title{font-size:1.15rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  white-space:nowrap;
+}
+.header-back{
+  width:36px;height:36px;border-radius:10px;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  flex-shrink:0;transition:var(--transition);
+}
+.header-back:active{transform:scale(0.9)}
+.header-right{margin-left:auto;display:flex;gap:8px}
+
+/* ===== Search ===== */
+.search-wrap{margin:12px 16px;position:relative}
+.search-wrap input{
+  width:100%;padding:12px 16px 12px 42px;
+  background:var(--bg2);border:1px solid var(--bg4);border-radius:12px;
+  font-size:0.95rem;color:var(--text);transition:var(--transition);
+}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,252,0.15)}
+.search-wrap .search-icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  color:var(--text3);font-size:1rem;pointer-events:none;
+}
+
+/* ===== Filter Bar ===== */
+.filter-bar{
+  padding:0 16px;display:flex;gap:8px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none;margin-bottom:8px;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{
+  flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+  border:1px solid transparent;white-space:nowrap;
+}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-chip:active{transform:scale(0.95)}
+.filter-chip .badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  font-size:0.65rem;font-weight:800;background:var(--pink);color:#fff;margin-left:5px;
+}
+.filter-chip.active .badge{background:rgba(255,255,255,0.3)}
+
+/* ===== Sort / Control Bar ===== */
+.control-bar{padding:8px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.control-bar .count{font-size:0.8rem;color:var(--text3);margin-right:auto}
+.ctrl-btn{
+  padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+}
+.ctrl-btn.active{background:var(--accent3);color:#fff}
+.ctrl-btn:active{transform:scale(0.95)}
+.and-or-toggle{padding:4px;border-radius:8px;background:var(--bg3);display:flex}
+.and-or-toggle button{padding:5px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;transition:var(--transition);color:var(--text3)}
+.and-or-toggle button.active{background:var(--accent);color:#fff}
+
+/* ===== Tag Badges ===== */
+.tag-badge{
+  display:inline-flex;align-items:center;padding:3px 10px;border-radius:10px;
+  font-size:0.7rem;font-weight:600;white-space:nowrap;transition:var(--transition);
+  cursor:pointer;border:1px solid transparent;
+}
+.tag-badge:active{transform:scale(0.93)}
+.tag-badge.selected{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,0.2)}
+
+/* ===== Cards ===== */
+.card-list{padding:8px 16px;display:flex;flex-direction:column;gap:12px}
+.card{
+  background:var(--bg2);border-radius:var(--card-radius);padding:16px;
+  border:1px solid var(--bg4);transition:var(--transition);
+  position:relative;overflow:hidden;animation:cardIn 0.3s ease both;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--pink));opacity:0;transition:var(--transition);
+}
+.card:active{transform:scale(0.985)}
+.card:active::before{opacity:1}
+.card.read{opacity:0.65}
+.card.read::before{display:none}
+.card.archived{display:none}
+.card .unread-dot{
+  position:absolute;top:16px;left:10px;width:8px;height:8px;
+  border-radius:50%;background:var(--accent);
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.card-title{font-size:1.05rem;font-weight:700;flex:1;line-height:1.3}
+.card-type{
+  flex-shrink:0;padding:3px 8px;border-radius:6px;font-size:0.65rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+}
+.card-type.proposal{background:rgba(124,92,252,0.2);color:var(--accent)}
+.card-type.seed{background:rgba(251,191,36,0.2);color:var(--yellow)}
+.card-rating{
+  flex-shrink:0;width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;
+}
+.card-rating.S{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000}
+.card-rating.A{background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff}
+.card-rating.B{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+.card-rating.C{background:linear-gradient(135deg,#6b7280,#4b5563);color:#fff}
+.card-logline{font-size:0.82rem;color:var(--text2);line-height:1.5;margin-bottom:10px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card-heart{
+  position:absolute;top:14px;right:14px;width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(0,0,0,0.3);font-size:1.1rem;
+  transition:var(--transition);z-index:2;
+}
+.card-heart.liked{color:var(--pink);animation:heartPop 0.35s ease}
+.card-heart:active{transform:scale(0.85)}
+@keyframes heartPop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+.card-memo-indicator{
+  position:absolute;bottom:14px;right:14px;font-size:0.7rem;
+  color:var(--yellow);display:flex;align-items:center;gap:3px;
+}
+
+/* ===== Detail Page ===== */
+.detail-page{display:none;padding:0 0 32px}
+.detail-page.visible{display:block}
+.detail-hero{padding:20px 16px;background:linear-gradient(180deg,var(--bg3) 0%,var(--bg) 100%)}
+.detail-hero .title{font-size:1.4rem;font-weight:800;margin-bottom:6px}
+.detail-hero .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.detail-hero .tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.highlight-box{
+  background:var(--bg2);border-radius:12px;padding:14px;margin-bottom:10px;
+  border-left:3px solid var(--accent);
+}
+.highlight-box.hook{border-left-color:var(--pink)}
+.highlight-box .label{font-size:0.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--accent);margin-bottom:4px}
+.highlight-box.hook .label{color:var(--pink)}
+.highlight-box p{font-size:0.88rem;line-height:1.6;color:var(--text)}
+.detail-actions{display:flex;gap:10px;padding:12px 16px}
+.detail-action-btn{
+  flex:1;padding:12px;border-radius:12px;font-size:0.85rem;font-weight:700;
+  text-align:center;transition:var(--transition);
+}
+.detail-action-btn.like-btn{background:var(--bg3);color:var(--text2)}
+.detail-action-btn.like-btn.liked{background:rgba(236,72,153,0.15);color:var(--pink)}
+.detail-action-btn.archive-btn{background:var(--bg3);color:var(--text2)}
+.detail-action-btn.archive-btn.archived{background:rgba(52,211,153,0.15);color:var(--green)}
+.detail-action-btn.pass-btn{background:rgba(248,113,113,0.15);color:var(--red)}
+.detail-action-btn.pass-btn.passed{background:rgba(248,113,113,0.25);color:var(--red)}
+.detail-action-btn.seed-btn{background:rgba(16,185,129,0.15);color:#10b981}
+.detail-action-btn:active{transform:scale(0.96)}
+/* NEW: Send to PONO button */
+.detail-action-btn.pono-btn{background:rgba(124,92,252,0.15);color:var(--accent)}
+.detail-action-btn.pono-btn:active{transform:scale(0.96)}
+
+/* ===== Memo ===== */
+.memo-section{
+  margin:0 16px 16px;padding:14px;background:var(--bg2);border-radius:12px;
+  border:1px solid var(--bg4);
+}
+.memo-section .memo-label{font-size:0.8rem;font-weight:700;color:var(--yellow);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.memo-section textarea{
+  width:100%;min-height:80px;padding:10px;background:var(--bg);
+  border:1px solid var(--bg4);border-radius:8px;resize:vertical;
+  font-size:0.85rem;line-height:1.5;color:var(--text);transition:var(--transition);
+}
+.memo-section textarea:focus{border-color:var(--accent)}
+.memo-section .memo-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.memo-save-btn{
+  padding:8px 18px;border-radius:8px;font-size:0.8rem;font-weight:700;
+  background:var(--accent);color:#fff;transition:var(--transition);
+}
+.memo-save-btn:active{transform:scale(0.95)}
+
+/* ===== Review ===== */
+.review-section{background:var(--bg3);border-radius:var(--card-radius);padding:14px;margin:12px 16px}
+.review-label{font-size:0.8rem;font-weight:700;color:var(--cyan);margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.star-rating{display:flex;gap:4px;margin-bottom:10px}
+.star-rating .star{font-size:1.8rem;cursor:pointer;color:var(--bg4);transition:color 0.15s}
+.star-rating .star.active{color:var(--yellow)}
+.status-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.status-pill{padding:5px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;border:1px solid var(--bg4);color:var(--text2);cursor:pointer;transition:var(--transition)}
+.status-pill.active[data-status="go"]{background:rgba(52,211,153,0.2);border-color:var(--green);color:var(--green)}
+.status-pill.active[data-status="rework"]{background:rgba(251,191,36,0.2);border-color:var(--yellow);color:var(--yellow)}
+.status-pill.active[data-status="pass"]{background:rgba(248,113,113,0.2);border-color:var(--red);color:var(--red)}
+.status-pill.active[data-status="maybe"]{background:rgba(124,92,252,0.2);border-color:var(--accent);color:var(--accent)}
+.review-comment{width:100%;min-height:60px;background:var(--bg2);border:1px solid var(--bg4);border-radius:10px;padding:10px;resize:vertical;font-size:0.85rem;margin-bottom:8px}
+.review-comment:focus{border-color:var(--cyan)}
+.review-save-btn{background:linear-gradient(135deg,var(--cyan),#0ea5e9);color:#000;font-weight:700;padding:8px 20px;border-radius:10px;font-size:0.85rem;width:100%}
+.review-save-btn:active{transform:scale(0.95)}
+.review-saved{font-size:0.75rem;color:var(--green);margin-top:6px;text-align:center}
+
+/* ===== Markdown Content ===== */
+.md-content{padding:16px;line-height:1.7;font-size:0.9rem}
+.md-content h1{font-size:1.4rem;font-weight:800;margin:20px 0 10px;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.md-content h2{font-size:1.15rem;font-weight:700;margin:18px 0 8px;color:var(--accent);
+  padding-bottom:4px;border-bottom:1px solid var(--bg4)}
+.md-content h3{font-size:1rem;font-weight:700;margin:14px 0 6px;color:var(--text)}
+.md-content p{margin:8px 0;color:var(--text2)}
+.md-content ul,.md-content ol{margin:8px 0 8px 20px;color:var(--text2)}
+.md-content li{margin:4px 0}
+.md-content strong{color:var(--text);font-weight:700}
+.md-content table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.82rem}
+.md-content th{background:var(--bg3);padding:8px 10px;text-align:left;font-weight:700;border:1px solid var(--bg4)}
+.md-content td{padding:8px 10px;border:1px solid var(--bg4);color:var(--text2)}
+.md-content tr:nth-child(even) td{background:rgba(30,30,50,0.4)}
+
+/* ===== Dashboard ===== */
+.dashboard{display:none;padding:16px}
+.dashboard.visible{display:block}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.dash-card{background:var(--bg2);border-radius:12px;padding:16px 12px;text-align:center;border:1px solid var(--bg4)}
+.dash-card .num{font-size:1.6rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.dash-card .lbl{font-size:0.7rem;color:var(--text3);margin-top:2px}
+.dash-section{margin-bottom:20px}
+.dash-section h3{font-size:0.9rem;font-weight:700;color:var(--text2);margin-bottom:10px}
+.dash-tag-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg4)}
+.dash-tag-row .tag-name{flex:1;font-size:0.85rem}
+.dash-tag-row .tag-count{font-size:0.85rem;font-weight:700;color:var(--accent)}
+.dash-tag-bar{flex:2;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.dash-tag-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+.export-btn{
+  width:100%;padding:14px;border-radius:12px;font-size:0.9rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;
+  transition:var(--transition);margin-top:8px;
+}
+.export-btn:active{transform:scale(0.97)}
+
+/* ===== Bottom Nav ===== */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(13,13,20,0.95);backdrop-filter:blur(12px);
+  border-top:1px solid rgba(124,92,252,0.15);
+  display:flex;padding:6px 0 calc(6px + var(--safe-bottom));
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 4px;font-size:0.6rem;color:var(--text3);transition:var(--transition);
+}
+.nav-item .nav-icon{font-size:1.3rem;transition:var(--transition)}
+.nav-item.active{color:var(--accent)}
+.nav-item.active .nav-icon{transform:scale(1.1)}
+.nav-item:active{transform:scale(0.9)}
+
+/* ===== Empty State ===== */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text3)}
+.empty-state .icon{font-size:3rem;margin-bottom:12px;opacity:0.5}
+.empty-state p{font-size:0.9rem}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--bg3);color:var(--text);padding:10px 20px;border-radius:10px;
+  font-size:0.82rem;font-weight:600;opacity:0;transition:all 0.3s ease;
+  pointer-events:none;z-index:200;border:1px solid var(--bg4);white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== Ideas Page ===== */
+.ideas-page{display:none;padding:12px 16px 32px}
+.ideas-page.visible{display:block}
+.idea-input-wrap{display:flex;gap:8px;margin-bottom:16px}
+.idea-input-wrap textarea{
+  flex:1;padding:12px;background:var(--bg2);border:1px solid var(--bg4);
+  border-radius:12px;font-size:0.9rem;color:var(--text);resize:none;
+  min-height:48px;max-height:120px;transition:var(--transition);
+}
+.idea-input-wrap textarea:focus{border-color:var(--accent)}
+.idea-add-btn{
+  flex-shrink:0;width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
+  font-size:1.4rem;display:flex;align-items:center;justify-content:center;
+  transition:var(--transition);align-self:flex-end;
+}
+.idea-add-btn:active{transform:scale(0.9)}
+.idea-list{display:flex;flex-direction:column;gap:10px}
+.idea-card{background:var(--bg2);border-radius:12px;padding:14px;border:1px solid var(--bg4);position:relative;animation:cardIn 0.3s ease both}
+.idea-card.done{opacity:0.5}
+.idea-card .idea-text{font-size:0.9rem;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.idea-card .idea-meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.7rem;color:var(--text3)}
+.idea-card .idea-actions{display:flex;gap:6px;margin-left:auto}
+.idea-action{width:30px;height:30px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:0.85rem;transition:var(--transition)}
+.idea-action:active{transform:scale(0.9)}
+.idea-empty{text-align:center;padding:48px 24px;color:var(--text3)}
+.idea-empty .icon{font-size:3rem;margin-bottom:12px;opacity:0.5}
+
+/* ===== Install Banner ===== */
+.install-banner{
+  position:fixed;bottom:70px;left:16px;right:16px;z-index:150;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));
+  border-radius:14px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 8px 32px rgba(124,92,252,0.3);animation:slideUp 0.4s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.install-banner .install-text{flex:1;font-size:0.85rem;font-weight:600;color:#fff;line-height:1.3}
+.install-banner .install-btn{padding:8px 18px;border-radius:10px;font-size:0.8rem;font-weight:700;background:#fff;color:var(--accent);white-space:nowrap}
+.install-banner .install-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:#fff;flex-shrink:0}
+
+/* ===== Sync ===== */
+.sync-bar{display:flex;align-items:center;gap:6px;padding:4px 16px;font-size:0.7rem;color:var(--text3)}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sync-dot.ok{background:var(--green)}
+.sync-dot.error{background:var(--red)}
+.sync-dot.syncing{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.sync-setup{margin:16px 0;padding:16px;background:var(--bg2);border-radius:12px;border:1px solid var(--bg4)}
+.sync-setup h4{font-size:0.9rem;font-weight:700;margin-bottom:10px;color:var(--accent)}
+.sync-setup p{font-size:0.8rem;color:var(--text2);line-height:1.5;margin-bottom:10px}
+.sync-setup input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--bg4);border-radius:8px;font-size:0.85rem;color:var(--text);margin-bottom:10px}
+.sync-setup input:focus{border-color:var(--accent)}
+.sync-setup .sync-save{width:100%;padding:10px;border-radius:10px;font-size:0.85rem;font-weight:700;background:linear-gradient(135deg,var(--green),#059669);color:#fff}
+.sync-setup .sync-save:active{transform:scale(0.97)}
+.sync-setup .sync-disconnect{width:100%;padding:10px;border-radius:10px;font-size:0.85rem;font-weight:700;background:var(--bg3);color:var(--red);margin-top:8px}
+
+/* ===== Modal ===== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  animation:fadeIn 0.2s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border-radius:16px;padding:24px;width:100%;max-width:400px;border:1px solid var(--bg4)}
+.modal h3{font-size:1.1rem;font-weight:700;margin-bottom:16px;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.modal-btn{width:100%;padding:14px;border-radius:12px;font-size:0.9rem;font-weight:700;margin-bottom:10px;transition:var(--transition);text-align:center}
+.modal-btn:active{transform:scale(0.97)}
+.modal-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff}
+.modal-btn.secondary{background:var(--bg3);color:var(--text2)}
+.modal-btn.danger{background:rgba(248,113,113,0.15);color:var(--red)}
+.modal .file-input-wrap{position:relative;overflow:hidden}
+.modal .file-input-wrap input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+
+/* ============================
+   ===== PONO STYLES START =====
+   ============================ */
+
+/* ===== PONO Page ===== */
+.pono-page{display:none;padding:0 0 32px}
+.pono-page.visible{display:block}
+
+/* ===== PONO Project List ===== */
+.pono-project-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.pono-project-card{
+  background:var(--bg2);border-radius:var(--card-radius);padding:16px;
+  border:1px solid var(--bg4);transition:var(--transition);
+  position:relative;overflow:hidden;animation:cardIn 0.3s ease both;cursor:pointer;
+}
+.pono-project-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--pink));opacity:0;transition:var(--transition);
+}
+.pono-project-card:active{transform:scale(0.985)}
+.pono-project-card:active::before{opacity:1}
+.pono-project-card .ppc-title{font-size:1rem;font-weight:700;margin-bottom:6px}
+.pono-project-card .ppc-meta{display:flex;align-items:center;gap:10px;font-size:0.75rem;color:var(--text3)}
+.pono-project-card .ppc-memo-count{color:var(--accent);font-weight:600}
+
+/* ===== PONO Memo Header ===== */
+.pono-memo-header{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:var(--bg2);border-bottom:1px solid var(--bg4);
+}
+.pono-memo-back{
+  width:32px;height:32px;border-radius:8px;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  flex-shrink:0;transition:var(--transition);
+}
+.pono-memo-back:active{transform:scale(0.9)}
+.pono-memo-title{flex:1;font-size:0.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== PONO Tag Filter Chips ===== */
+.pono-tag-filter{
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--bg4);
+}
+.pono-tag-filter::-webkit-scrollbar{display:none}
+.pono-tag-chip{
+  flex-shrink:0;padding:6px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+  border:1px solid transparent;white-space:nowrap;cursor:pointer;
+}
+.pono-tag-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pono-tag-chip:active{transform:scale(0.95)}
+
+/* ===== PONO Memo List ===== */
+.pono-memo-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:200px}
+.pono-memo-card{
+  background:var(--bg2);border-radius:12px;padding:12px 14px;
+  border:1px solid var(--bg4);transition:var(--transition);animation:cardIn 0.25s ease both;
+}
+.pono-memo-text{font-size:0.88rem;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.pono-memo-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.pono-memo-tag{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:8px;
+  font-size:0.68rem;font-weight:600;white-space:nowrap;
+}
+.pono-memo-tag.tag-idea{background:rgba(124,92,252,0.15);color:#7c5cfc}
+.pono-memo-tag.tag-scene{background:rgba(236,72,153,0.15);color:#ec4899}
+.pono-memo-tag.tag-character{background:rgba(245,158,11,0.15);color:#f59e0b}
+.pono-memo-tag.tag-world{background:rgba(16,185,129,0.15);color:#10b981}
+.pono-memo-tag.tag-script{background:rgba(59,130,246,0.15);color:#3b82f6}
+.pono-memo-tag.tag-asset{background:rgba(107,114,128,0.15);color:#6b7280}
+.pono-memo-bottom{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.68rem;color:var(--text3)}
+.pono-memo-actions{display:flex;gap:5px;margin-left:auto}
+.pono-memo-action-btn{
+  width:28px;height:28px;border-radius:7px;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:0.78rem;
+  transition:var(--transition);
+}
+.pono-memo-action-btn:active{transform:scale(0.88)}
+
+/* ===== PONO FAB ===== */
+.pono-fab{
+  position:fixed;right:20px;bottom:80px;width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
+  font-size:1.6rem;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(124,92,252,0.4);z-index:90;
+  transition:var(--transition);
+}
+.pono-fab.hidden{display:none}
+.pono-fab:active{transform:scale(0.92)}
+
+/* ===== PONO Memo Edit Modal ===== */
+.memo-edit-modal .modal{max-height:90vh;overflow-y:auto}
+.memo-tag-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.memo-tag-btn{
+  padding:5px 10px;border-radius:8px;font-size:0.72rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);border:1px solid transparent;
+  transition:var(--transition);cursor:pointer;
+}
+.memo-tag-btn.active.tag-idea{background:rgba(124,92,252,0.2);color:#7c5cfc;border-color:#7c5cfc}
+.memo-tag-btn.active.tag-scene{background:rgba(236,72,153,0.2);color:#ec4899;border-color:#ec4899}
+.memo-tag-btn.active.tag-character{background:rgba(245,158,11,0.2);color:#f59e0b;border-color:#f59e0b}
+.memo-tag-btn.active.tag-world{background:rgba(16,185,129,0.2);color:#10b981;border-color:#10b981}
+.memo-tag-btn.active.tag-script{background:rgba(59,130,246,0.2);color:#3b82f6;border-color:#3b82f6}
+.memo-tag-btn.active.tag-asset{background:rgba(107,114,128,0.2);color:#6b7280;border-color:#6b7280}
+.memo-edit-textarea{
+  width:100%;min-height:120px;max-height:300px;padding:12px;
+  background:var(--bg);border:1px solid var(--bg4);border-radius:10px;
+  font-size:0.9rem;line-height:1.6;color:var(--text);resize:vertical;
+  margin-bottom:12px;transition:var(--transition);
+}
+.memo-edit-textarea:focus{border-color:var(--accent)}
+
+/* ===== Update Badge ===== */
+.update-badge{
+  position:absolute;top:12px;left:24px;
+  background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;
+  font-size:0.6rem;font-weight:800;padding:2px 6px;border-radius:4px;
+  letter-spacing:0.5px;z-index:2;
+}
+
+/* ===== Update Diff ===== */
+.update-diff{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:10px;padding:12px;margin-top:12px}
+.diff-label{font-size:0.8rem;font-weight:700;color:#ff6b6b;margin-bottom:8px}
+.diff-item{margin-bottom:8px}
+.diff-field{font-size:0.75rem;font-weight:600;color:var(--text2);display:block;margin-bottom:4px}
+.diff-old{font-size:0.82rem;color:#ff6b6b;text-decoration:line-through;opacity:0.7;margin-bottom:4px;line-height:1.5}
+.diff-new{font-size:0.82rem;color:#44dd88;line-height:1.5}
+.diff-toggle-btn{margin-top:6px;padding:6px 14px;border-radius:8px;font-size:0.78rem;font-weight:600;background:var(--bg3);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3);cursor:pointer}
+.diff-toggle-btn:active{transform:scale(0.95)}
+
+/* ===== Section Feedback ===== */
+.section-fb-btn{background:none;border:none;color:var(--text3);font-size:0.75rem;cursor:pointer;padding:2px 6px;border-radius:4px;position:absolute;top:8px;right:8px}
+.section-fb-btn:hover{background:var(--bg3)}
+.fb-count{font-size:0.65rem;background:var(--accent);color:#fff;border-radius:8px;padding:0 4px;margin-left:2px}
+.section-fb-area{margin-top:8px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--bg4)}
+.fb-list{max-height:120px;overflow-y:auto;margin-bottom:6px}
+.fb-item{font-size:0.78rem;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--bg3)}
+.fb-input-row{display:flex;gap:6px}
+.fb-input{flex:1;padding:6px 10px;background:var(--bg2);border:1px solid var(--bg4);border-radius:6px;font-size:0.8rem;color:var(--text)}
+.fb-submit{padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer}
+
+/* ===== Next Unreviewed Button ===== */
+.next-unreviewed-btn{
+  display:block;width:calc(100% - 32px);margin:16px auto;padding:14px;border-radius:12px;
+  font-size:0.9rem;font-weight:700;text-align:center;
+  background:linear-gradient(135deg,var(--cyan),#0ea5e9);color:#000;
+  transition:var(--transition);
+}
+.next-unreviewed-btn:active{transform:scale(0.97)}
+
+/* ===== Compare Mode ===== */
+.compare-toggle{
+  padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+}
+.compare-toggle.active{background:var(--accent3);color:#fff}
+.compare-toggle:active{transform:scale(0.95)}
+.compare-bar{
+  display:flex;align-items:center;gap:8px;padding:8px 16px;
+  background:var(--bg2);border-bottom:1px solid var(--bg4);
+}
+.compare-bar .compare-count{font-size:0.8rem;color:var(--text3);flex:1}
+.compare-bar .compare-go-btn{
+  padding:8px 16px;border-radius:10px;font-size:0.8rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;
+  transition:var(--transition);
+}
+.compare-bar .compare-go-btn:active{transform:scale(0.95)}
+.compare-bar .compare-go-btn:disabled{opacity:0.4}
+.compare-bar .compare-cancel-btn{
+  padding:8px 12px;border-radius:10px;font-size:0.8rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);transition:var(--transition);
+}
+.card .compare-check{
+  position:absolute;top:14px;left:14px;width:24px;height:24px;
+  border-radius:6px;background:var(--bg3);border:2px solid var(--bg4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;color:transparent;z-index:3;transition:var(--transition);
+}
+.card .compare-check.checked{background:var(--accent);border-color:var(--accent);color:#fff}
+.compare-modal-overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);
+  display:flex;flex-direction:column;animation:fadeIn 0.2s ease;
+  overflow-y:auto;
+}
+.compare-modal-header{
+  position:sticky;top:0;z-index:1;padding:16px;background:rgba(13,13,20,0.95);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--bg4);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.compare-modal-header h3{
+  font-size:1rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.compare-modal-close{
+  padding:8px 16px;border-radius:10px;font-size:0.8rem;font-weight:600;
+  background:var(--bg3);color:var(--text2);
+}
+.compare-columns{
+  display:flex;gap:1px;background:var(--bg4);flex:1;min-height:0;
+}
+.compare-col{
+  flex:1;min-width:0;background:var(--bg);padding:16px 12px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.compare-col .col-title{font-size:0.95rem;font-weight:800;line-height:1.3}
+.compare-col .col-rating{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:6px;font-size:0.8rem;font-weight:800;
+}
+.compare-col .col-section{margin-bottom:8px}
+.compare-col .col-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:4px}
+.compare-col .col-text{font-size:0.8rem;line-height:1.5;color:var(--text2)}
+.compare-col .col-tags{display:flex;flex-wrap:wrap;gap:4px}
+.compare-col .col-status{
+  display:inline-block;padding:3px 8px;border-radius:6px;font-size:0.7rem;font-weight:600;
+}
+
+/* ===== Utilities ===== */
+.hidden{display:none!important}
+</style>
+
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+<meta name="theme-color" content="#0d0d14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="企画スタジオ">
+<meta name="description" content="アニメ企画レビュー＆仮組みスタジオ">
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <button class="header-back hidden" id="backBtn" aria-label="戻る">&#8592;</button>
+    <div class="header-title" id="headerTitle">Anime Pitch Studio</div>
+    <div class="header-right" id="headerRight"></div>
+  </header>
+
+  <!-- List View -->
+  <div id="listView">
+    <div class="search-wrap">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" id="searchInput" placeholder="企画を検索...">
+    </div>
+    <div class="filter-bar" id="typeFilter">
+      <button class="filter-chip active" data-type="inbox">INBOX <span class="badge hidden" id="inboxBadge">0</span></button>
+      <button class="filter-chip" data-type="all">すべて</button>
+      <button class="filter-chip" data-type="proposal">企画書</button>
+      <button class="filter-chip" data-type="seed">シード</button>
+      <button class="filter-chip" data-type="liked">&#10084; ライク済</button>
+      <button class="filter-chip" data-type="memo">&#9997; メモ付</button>
+      <button class="filter-chip" data-type="archived">&#128451; アーカイブ</button>
+      <button class="filter-chip" data-type="passed">&#128683; 見送り</button>
+      <button class="filter-chip" data-type="unreviewed">&#128203; 未レビュー</button>
+    </div>
+    <div class="filter-bar" id="tagFilter"></div>
+    <div class="control-bar">
+      <span class="count" id="resultCount"></span>
+      <button class="compare-toggle" id="compareToggle">&#9878; 比較</button>
+      <div class="and-or-toggle" id="andOrToggle">
+        <button class="active" data-mode="or">OR</button>
+        <button data-mode="and">AND</button>
+      </div>
+      <button class="ctrl-btn" id="sortBtn" data-sort="rating">評価順</button>
+    </div>
+    <div class="compare-bar hidden" id="compareBar">
+      <span class="compare-count" id="compareCount">0件選択中</span>
+      <button class="compare-go-btn" id="compareGoBtn" disabled>比較する</button>
+      <button class="compare-cancel-btn" id="compareCancelBtn">キャンセル</button>
+    </div>
+    <div class="card-list" id="cardList"></div>
+    <div class="empty-state hidden" id="emptyState">
+      <div class="icon">&#128270;</div>
+      <p>条件に一致する企画がありません</p>
+    </div>
+  </div>
+
+  <!-- Detail View -->
+  <div class="detail-page" id="detailView">
+    <div class="detail-hero" id="detailHero"></div>
+    <div class="detail-actions" id="detailActions"></div>
+    <div class="review-section" id="reviewSection">
+      <div class="review-label">&#11088; レビュー</div>
+      <div class="star-rating" id="starRating">
+        <span class="star" data-val="1">&#9733;</span>
+        <span class="star" data-val="2">&#9733;</span>
+        <span class="star" data-val="3">&#9733;</span>
+        <span class="star" data-val="4">&#9733;</span>
+        <span class="star" data-val="5">&#9733;</span>
+      </div>
+      <div class="status-pills" id="statusPills">
+        <span class="status-pill" data-status="go">GO</span>
+        <span class="status-pill" data-status="rework">要改善</span>
+        <span class="status-pill" data-status="maybe">保留</span>
+        <span class="status-pill" data-status="pass">見送り</span>
+      </div>
+      <textarea class="review-comment" id="reviewComment" placeholder="フィードバックコメント..."></textarea>
+      <button class="review-save-btn" id="reviewSaveBtn">レビュー保存</button>
+      <div class="review-saved" id="reviewSaved"></div>
+    </div>
+    <div class="memo-section" id="memoSection">
+      <div class="memo-label">&#128221; メモ</div>
+      <textarea id="memoText" placeholder="この企画についてメモを残す..."></textarea>
+      <div class="memo-actions">
+        <button class="memo-save-btn" id="memoSaveBtn">保存</button>
+      </div>
+    </div>
+    <div class="md-content" id="mdContent"></div>
+  </div>
+
+  <!-- Ideas View -->
+  <div class="ideas-page" id="ideasView">
+    <div class="idea-input-wrap">
+      <textarea id="ideaInput" placeholder="新しいアイデアを入力..." rows="1"></textarea>
+      <button class="idea-add-btn" id="ideaAddBtn">+</button>
+    </div>
+    <div class="idea-list" id="ideaList"></div>
+    <div class="idea-empty hidden" id="ideaEmpty">
+      <div class="icon">&#128161;</div>
+      <p>アイデアを追加しよう</p>
+    </div>
+  </div>
+
+  <!-- PONO View (仮組み) -->
+  <div class="pono-page" id="ponoView">
+    <div class="pono-project-list" id="ponoProjectList"></div>
+    <div class="empty-state hidden" id="ponoEmpty">
+      <div style="font-size:3rem;opacity:0.5">&#127959;</div>
+      <p>企画の詳細画面から「仮組みへ」で追加</p>
+    </div>
+  </div>
+
+  <!-- Dashboard View -->
+  <div class="dashboard" id="dashboardView">
+    <div class="dash-grid" id="dashGrid"></div>
+    <div class="dash-section" id="dashTags">
+      <h3>タグ別企画数</h3>
+      <div id="dashTagList"></div>
+    </div>
+    <div class="dash-section">
+      <h3>エクスポート</h3>
+      <button class="export-btn" id="exportBtn">&#128230; ライク済みをJSON出力</button>
+      <button class="export-btn" id="exportFeedbackBtn" style="margin-top:8px;background:linear-gradient(135deg,var(--cyan),#0ea5e9)">&#128202; フィードバックJSON出力</button>
+    </div>
+    <div class="dash-section">
+      <h3>データ管理</h3>
+      <button class="export-btn" id="openBackupBtn" style="background:linear-gradient(135deg,var(--green),#059669)">&#128274; バックアップ / リストア</button>
+    </div>
+    <div class="dash-section" id="syncSection">
+      <h3>GitHub同期</h3>
+      <div class="sync-bar" id="syncStatus">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncLabel">未設定</span>
+      </div>
+      <div class="sync-setup" id="syncSetup">
+        <h4>初回設定</h4>
+        <p>GitHubのPersonal Access Token（PAT）を入力。<br>トークンはこの端末にのみ保存されます。</p>
+        <input type="password" id="syncTokenInput" placeholder="ghp_xxxxxxxxxxxx">
+        <button class="sync-save" id="syncSaveBtn">接続する</button>
+        <button class="sync-disconnect hidden" id="syncDisconnectBtn">接続解除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compare Modal -->
+  <div class="compare-modal-overlay hidden" id="compareModal">
+    <div class="compare-modal-header">
+      <h3>&#9878; 企画比較</h3>
+      <button class="compare-modal-close" id="compareModalClose">閉じる</button>
+    </div>
+    <div class="compare-columns" id="compareColumns"></div>
+  </div>
+
+</div><!-- /#app -->
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" data-view="list">
+    <span class="nav-icon">&#128196;</span>
+    <span>INBOX</span>
+  </button>
+  <button class="nav-item" data-view="ideas">
+    <span class="nav-icon">&#128161;</span>
+    <span>アイデア</span>
+  </button>
+  <button class="nav-item" data-view="pono">
+    <span class="nav-icon">&#127959;</span>
+    <span>仮組み</span>
+  </button>
+  <button class="nav-item" data-view="dashboard">
+    <span class="nav-icon">&#9881;</span>
+    <span>設定</span>
+  </button>
+</nav>
+
+<!-- PONO FAB -->
+<button class="pono-fab hidden" id="ponoFab">+</button>
+
+<!-- Install Banner -->
+<div class="install-banner hidden" id="installBanner">
+  <div class="install-text">ホーム画面に追加してアプリとして使えます</div>
+  <button class="install-btn" id="installBtn">追加</button>
+  <button class="install-close" id="installClose">&#10005;</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Backup Modal -->
+<div class="modal-overlay hidden" id="backupModal">
+  <div class="modal">
+    <h3>データ管理</h3>
+    <button class="modal-btn primary" id="backupExportBtn">&#128230; バックアップ書き出し</button>
+    <div class="file-input-wrap">
+      <button class="modal-btn secondary" id="backupImportLabel">&#128229; バックアップ読み込み</button>
+      <input type="file" id="backupImportFile" accept=".json">
+    </div>
+    <button class="modal-btn danger" id="backupCloseBtn">閉じる</button>
+  </div>
+</div>
+
+<!-- Memo Edit Modal -->
+<div class="modal-overlay hidden memo-edit-modal" id="memoEditModal">
+  <div class="modal">
+    <h3 id="memoModalTitle">メモを追加</h3>
+    <div class="memo-tag-select" id="memoTagSelect">
+      <button class="memo-tag-btn tag-idea" data-tag="idea">&#128161; アイデア</button>
+      <button class="memo-tag-btn tag-scene" data-tag="scene">&#127916; シーン</button>
+      <button class="memo-tag-btn tag-character" data-tag="character">&#128100; キャラ</button>
+      <button class="memo-tag-btn tag-world" data-tag="world">&#127759; 世界観</button>
+      <button class="memo-tag-btn tag-script" data-tag="script">&#128221; 脚本</button>
+      <button class="memo-tag-btn tag-asset" data-tag="asset">&#128193; 素材</button>
+    </div>
+    <textarea class="memo-edit-textarea" id="memoEditText" placeholder="メモの内容を入力..."></textarea>
+    <button class="modal-btn primary" id="memoEditSaveBtn">保存</button>
+    <button class="modal-btn danger" id="memoEditCancelBtn">キャンセル</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+
+// ===== Constants =====
+const TAG_COLORS = ['#7c5cfc','#ec4899','#f59e0b','#10b981','#06b6d4','#8b5cf6','#ef4444','#3b82f6','#14b8a6','#f97316'];
+const PONO_TAGS = {
+  idea: '\u{1F4A1} アイデア',
+  scene: '\u{1F3AC} シーン',
+  character: '\u{1F464} キャラ',
+  world: '\u{1F30F} 世界観',
+  script: '\u{1F4DD} 脚本',
+  asset: '\u{1F4C1} 素材'
+};
+
+// ===== State =====
+let state = {
+  view: 'list',
+  search: '',
+  typeFilter: 'inbox',
+  selectedTags: [],
+  tagMode: 'or',
+  sort: 'rating',
+  currentId: null,
+  likes: {},
+  memos: {},
+  reviews: {},
+  readItems: {},
+  archivedItems: {},
+  passedItems: {},
+  ideas: [],
+  seenHashes: {},
+  prevVersions: {},
+  sectionComments: {},
+  // PONO state
+  pono: {
+    sentIds: [],
+    activeId: null,
+    notes: {} // { [proposalId]: [{id, text, tags:[], createdAt, updatedAt}] }
+  }
+};
+
+// ===== Storage =====
+function loadStorage(){
+  try{
+    const keys = ['likes','memos','reviews','readItems','archivedItems','passedItems','ideas'];
+    const storageKeys = ['ap_likes','ap_memos','ap_reviews','ap_read','ap_archived','ap_passed','ap_ideas'];
+    keys.forEach((k,i) => {
+      const v = localStorage.getItem(storageKeys[i]);
+      if(v) state[k] = JSON.parse(v);
+    });
+    const sc = localStorage.getItem('ap_section_comments');
+    if(sc) state.sectionComments = JSON.parse(sc);
+    const pono = localStorage.getItem('ap_pono');
+    if(pono) state.pono = Object.assign(state.pono, JSON.parse(pono));
+    const sh = localStorage.getItem('ap_seen_hashes');
+    if(sh) state.seenHashes = JSON.parse(sh);
+    const pv = localStorage.getItem('ap_prev_versions');
+    if(pv) state.prevVersions = JSON.parse(pv);
+  }catch(e){}
+}
+function saveLikes(){ localStorage.setItem('ap_likes', JSON.stringify(state.likes)); }
+function saveMemos(){ localStorage.setItem('ap_memos', JSON.stringify(state.memos)); }
+function saveReviews(){ localStorage.setItem('ap_reviews', JSON.stringify(state.reviews)); }
+function saveRead(){ localStorage.setItem('ap_read', JSON.stringify(state.readItems)); }
+function saveArchived(){ localStorage.setItem('ap_archived', JSON.stringify(state.archivedItems)); }
+function savePassedItems(){ localStorage.setItem('ap_passed', JSON.stringify(state.passedItems)); }
+function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.ideas)); }
+function savePono(){ localStorage.setItem('ap_pono', JSON.stringify(state.pono)); }
+function saveSeenHashes(){ localStorage.setItem('ap_seen_hashes', JSON.stringify(state.seenHashes)); }
+function savePrevVersions(){ localStorage.setItem('ap_prev_versions', JSON.stringify(state.prevVersions)); }
+function saveSectionComments(){ localStorage.setItem('ap_section_comments', JSON.stringify(state.sectionComments)); }
+
+// ===== Tag color map =====
+const tagColorMap = {};
+let colorIdx = 0;
+function getTagColor(tag){
+  if(!tagColorMap[tag]){ tagColorMap[tag] = TAG_COLORS[colorIdx % TAG_COLORS.length]; colorIdx++; }
+  return tagColorMap[tag];
+}
+
+function ratingVal(r){ return {S:4,A:3,B:2,C:1}[r]||0; }
+
+function getAllTags(){
+  const s = new Set();
+  PROPOSALS_DATA.forEach(p => p.tags.forEach(t => s.add(t)));
+  return [...s];
+}
+
+function getUnreadCount(){
+  return PROPOSALS_DATA.filter(p => !state.readItems[p.id] && !state.archivedItems[p.id] && !state.passedItems[p.id]).length;
+}
+
+function updateInboxBadge(){
+  const count = getUnreadCount();
+  const badge = document.getElementById('inboxBadge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+}
+
+// ===== Update Detection =====
+function hashProposal(p){
+  const str = (p.logline||'') + (p.hook||'') + (p.content||'') + (p.tags||[]).join(',');
+  let h = 0;
+  for(let i = 0; i < str.length; i++){ h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
+  return h.toString(36);
+}
+
+function checkForUpdates(){
+  let updatedCount = 0;
+  PROPOSALS_DATA.forEach(p => {
+    const newHash = hashProposal(p);
+    const oldHash = state.seenHashes[p.id];
+    if(oldHash && oldHash !== newHash){
+      // Content changed! Save previous version from stored snapshot
+      const prev = state.prevVersions[p.id] || {};
+      state.prevVersions[p.id] = {
+        logline: prev.logline_current || p.logline,
+        hook: prev.hook_current || p.hook,
+        content: prev.content_current || p.content,
+        savedAt: new Date().toISOString(),
+        logline_current: p.logline,
+        hook_current: p.hook,
+        content_current: p.content
+      };
+      // Mark as unread and un-archive/un-pass so it appears in INBOX
+      delete state.readItems[p.id];
+      delete state.archivedItems[p.id];
+      delete state.passedItems[p.id];
+      updatedCount++;
+    } else {
+      // No change - just update the current snapshot
+      if(!state.prevVersions[p.id]) state.prevVersions[p.id] = {};
+      state.prevVersions[p.id].logline_current = p.logline;
+      state.prevVersions[p.id].hook_current = p.hook;
+      state.prevVersions[p.id].content_current = p.content;
+    }
+    // Store current hash
+    state.seenHashes[p.id] = newHash;
+  });
+  // Always save hashes and snapshots
+  saveSeenHashes();
+  savePrevVersions();
+  if(updatedCount > 0){
+    saveSeenHashes(); savePrevVersions(); saveRead(); saveArchived(); savePassedItems();
+    showToast(updatedCount + '件の企画が更新されました');
+  }
+}
+
+window.togglePrevContent = function(){
+  const area = document.getElementById('prevContentArea');
+  if(!area) return;
+  if(area.classList.contains('hidden')){
+    const prev = state.prevVersions[state.currentId];
+    if(prev && prev.content){
+      document.getElementById('prevContentBody').innerHTML = parseMD(prev.content);
+    }
+    area.classList.remove('hidden');
+  } else {
+    area.classList.add('hidden');
+  }
+};
+
+// ===== Section Feedback =====
+function getSectionFBCount(key){
+  return (state.sectionComments[key]||[]).length;
+}
+function renderSectionFBArea(key){
+  const comments = state.sectionComments[key]||[];
+  let listHtml = comments.map(c => `<div class="fb-item">${escapeHtml(c.text)} <span style="font-size:0.65rem;color:var(--text3);margin-left:6px">${new Date(c.date).toLocaleDateString('ja-JP')}</span></div>`).join('');
+  return `<div class="section-fb-area hidden" id="fb_${key}">
+    <div class="fb-list">${listHtml}</div>
+    <div class="fb-input-row">
+      <input type="text" placeholder="\u30b3\u30e1\u30f3\u30c8..." class="fb-input" id="fb_input_${key}">
+      <button class="fb-submit" onclick="submitSectionFB('${key}')">\u9001\u4fe1</button>
+    </div>
+  </div>`;
+}
+window.toggleSectionFB = function(key){
+  const area = document.getElementById('fb_'+key);
+  if(!area) return;
+  area.classList.toggle('hidden');
+  if(!area.classList.contains('hidden')){
+    const input = document.getElementById('fb_input_'+key);
+    if(input) setTimeout(()=>input.focus(),50);
+  }
+};
+window.submitSectionFB = function(key){
+  const input = document.getElementById('fb_input_'+key);
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text) return;
+  if(!state.sectionComments[key]) state.sectionComments[key] = [];
+  state.sectionComments[key].push({text, date:new Date().toISOString()});
+  saveSectionComments();
+  input.value='';
+  // Re-render the feedback area
+  const area = document.getElementById('fb_'+key);
+  const listEl = area.querySelector('.fb-list');
+  const comments = state.sectionComments[key];
+  listEl.innerHTML = comments.map(c => `<div class="fb-item">${escapeHtml(c.text)} <span style="font-size:0.65rem;color:var(--text3);margin-left:6px">${new Date(c.date).toLocaleDateString('ja-JP')}</span></div>`).join('');
+  listEl.scrollTop = listEl.scrollHeight;
+  // Update count badge
+  const countEl = document.querySelector(`[data-fb-key="${key}"] .fb-count`);
+  if(countEl){ const cnt = comments.length; countEl.textContent = cnt; countEl.style.display = cnt>0?'inline':'none'; }
+  showToast('\u30b3\u30e1\u30f3\u30c8\u3092\u8ffd\u52a0\u3057\u307e\u3057\u305f');
+};
+
+function getFiltered(){
+  let list = PROPOSALS_DATA.slice();
+  if(state.typeFilter === 'inbox') list = list.filter(p => !state.archivedItems[p.id] && !state.passedItems[p.id]);
+  else if(state.typeFilter === 'archived') list = list.filter(p => state.archivedItems[p.id]);
+  else if(state.typeFilter === 'passed') list = list.filter(p => state.passedItems[p.id]);
+  else if(state.typeFilter === 'proposal') list = list.filter(p => p.type === 'proposal' && !state.archivedItems[p.id] && !state.passedItems[p.id]);
+  else if(state.typeFilter === 'seed') list = list.filter(p => p.type === 'seed' && !state.archivedItems[p.id] && !state.passedItems[p.id]);
+  else if(state.typeFilter === 'liked') list = list.filter(p => state.likes[p.id]);
+  else if(state.typeFilter === 'memo') list = list.filter(p => state.memos[p.id] && state.memos[p.id].trim());
+  else if(state.typeFilter === 'unreviewed') list = list.filter(p => !state.reviews[p.id] || !state.reviews[p.id].status);
+  if(state.search){
+    const q = state.search.toLowerCase();
+    list = list.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.logline.toLowerCase().includes(q) ||
+      p.tags.some(t => t.toLowerCase().includes(q))
+    );
+  }
+  if(state.selectedTags.length > 0){
+    if(state.tagMode === 'and'){
+      list = list.filter(p => state.selectedTags.every(t => p.tags.includes(t)));
+    } else {
+      list = list.filter(p => state.selectedTags.some(t => p.tags.includes(t)));
+    }
+  }
+  if(state.sort === 'rating'){
+    list.sort((a,b) => ratingVal(b.rating) - ratingVal(a.rating));
+  } else {
+    list.sort((a,b) => a.title.localeCompare(b.title,'ja'));
+  }
+  return list;
+}
+
+// ===== Markdown Parser =====
+function parseMD(md){
+  if(!md) return '';
+  const lines = md.split('\n');
+  let html = '', inTable=false, tableHeader=false, inUl=false, inOl=false;
+  for(let i=0;i<lines.length;i++){
+    let line = lines[i];
+    if(line.trim().startsWith('|') && line.trim().endsWith('|')){
+      const cells = line.split('|').filter((_,idx,arr)=>idx>0&&idx<arr.length-1).map(c=>c.trim());
+      if(cells.every(c=>/^[-:]+$/.test(c))){ tableHeader=false; continue; }
+      if(!inTable){ if(inUl){html+='</ul>';inUl=false} if(inOl){html+='</ol>';inOl=false} html+='<table>'; inTable=true; tableHeader=true; }
+      const tag = tableHeader?'th':'td';
+      html+='<tr>'+cells.map(c=>'<'+tag+'>'+inlineFormat(c)+'</'+tag+'>').join('')+'</tr>';
+      if(tableHeader) tableHeader=false;
+      continue;
+    } else if(inTable){ html+='</table>'; inTable=false; }
+    const h3=line.match(/^### (.+)/); if(h3){if(inUl){html+='</ul>';inUl=false}if(inOl){html+='</ol>';inOl=false}html+='<h3>'+inlineFormat(h3[1])+'</h3>';continue}
+    const h2=line.match(/^## (.+)/); if(h2){if(inUl){html+='</ul>';inUl=false}if(inOl){html+='</ol>';inOl=false}html+='<h2>'+inlineFormat(h2[1])+'</h2>';continue}
+    const h1=line.match(/^# (.+)/); if(h1){if(inUl){html+='</ul>';inUl=false}if(inOl){html+='</ol>';inOl=false}html+='<h1>'+inlineFormat(h1[1])+'</h1>';continue}
+    const ul=line.match(/^[-*] (.+)/); if(ul){if(inOl){html+='</ol>';inOl=false}if(!inUl){html+='<ul>';inUl=true}html+='<li>'+inlineFormat(ul[1])+'</li>';continue}else if(inUl){html+='</ul>';inUl=false}
+    const ol=line.match(/^\d+\. (.+)/); if(ol){if(inUl){html+='</ul>';inUl=false}if(!inOl){html+='<ol>';inOl=true}html+='<li>'+inlineFormat(ol[1])+'</li>';continue}else if(inOl){html+='</ol>';inOl=false}
+    if(line.trim()===''){continue}
+    html+='<p>'+inlineFormat(line)+'</p>';
+  }
+  if(inUl)html+='</ul>';if(inOl)html+='</ol>';if(inTable)html+='</table>';
+  return html;
+}
+function inlineFormat(s){
+  s=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/__(.+?)__/g,'<strong>$1</strong>');
+  return s;
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===== Next Unreviewed Navigation =====
+window._goNextUnreviewed = function(id){
+  renderDetail(id);
+  showView('detail');
+  window.scrollTo(0,0);
+};
+
+// ===== Potential Score =====
+function calcPotentialScore(p){
+  let score = 0;
+  const r = state.reviews[p.id];
+  const rating = p.rating || '';
+  if((rating.includes('A')||rating.includes('S')) && r && r.status==='rework') score+=3;
+  if(r && r.rating>=4 && r.status!=='go') score+=2;
+  if(state.likes[p.id] && state.memos[p.id]) score+=2;
+  if(state.sectionComments){
+    const hasComments = Object.keys(state.sectionComments).some(k=>k.startsWith(p.id));
+    if(hasComments) score+=1;
+  }
+  if(p.type==='seed' && p.tags && p.tags.length>=3) score+=1;
+  return score;
+}
+
+// ===== Toast =====
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+// ===== Render List =====
+function renderTagFilter(){
+  const container = document.getElementById('tagFilter');
+  const tags = getAllTags();
+  container.innerHTML = tags.map(tag => {
+    const c = getTagColor(tag);
+    const sel = state.selectedTags.includes(tag) ? ' selected' : '';
+    return `<button class="tag-badge${sel}" data-tag="${tag}" style="background:${c}22;color:${c}">${tag}</button>`;
+  }).join('');
+}
+
+function renderCards(){
+  const list = getFiltered();
+  const container = document.getElementById('cardList');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('resultCount').textContent = list.length + '件';
+  if(list.length === 0){ container.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  container.innerHTML = list.map((p,i) => {
+    const liked = state.likes[p.id];
+    const isRead = state.readItems[p.id];
+    const hasMemo = state.memos[p.id] && state.memos[p.id].trim();
+    const isUpdated = state.prevVersions[p.id] && state.prevVersions[p.id].savedAt && !state.readItems[p.id];
+    const tagsHtml = p.tags.map(t => { const c=getTagColor(t); return `<span class="tag-badge" style="background:${c}22;color:${c}">${t}</span>`; }).join('');
+    return `<div class="card${isRead?' read':''}" data-id="${p.id}" style="animation-delay:${i*0.04}s">
+      ${!isRead?'<div class="unread-dot"></div>':''}
+      ${isUpdated?'<div class="update-badge">更新</div>':''}
+      <button class="card-heart${liked?' liked':''}" data-heart="${p.id}">${liked?'&#10084;':'&#9825;'}</button>
+      ${hasMemo?'<div class="card-memo-indicator">&#128221; メモあり</div>':''}
+      <div class="card-top">
+        <div class="card-title">${escapeHtml(p.title)}</div>
+        <span class="card-type ${p.type}">${p.type==='proposal'?'企画書':'シード'}</span>
+        <span class="card-rating ${p.rating}">${p.rating}</span>
+      </div>
+      <div class="card-logline">${escapeHtml(p.logline)}</div>
+      <div class="card-footer">${tagsHtml}</div>
+    </div>`;
+  }).join('');
+  updateInboxBadge();
+}
+
+function renderDetail(id){
+  const p = PROPOSALS_DATA.find(x => x.id === id);
+  if(!p) return;
+  state.currentId = id;
+  const liked = state.likes[id];
+  const tagsHtml = p.tags.map(t => { const c=getTagColor(t); return `<span class="tag-badge" style="background:${c}22;color:${c}">${t}</span>`; }).join('');
+  // Build diff HTML if previous version exists
+  const prev = state.prevVersions[id];
+  const hasPrev = prev && prev.savedAt;
+  let diffHtml = '';
+  if(hasPrev){
+    diffHtml = '<div class="update-diff">';
+    diffHtml += '<div class="diff-label">&#128221; 更新あり (' + new Date(prev.savedAt).toLocaleDateString('ja-JP') + ')</div>';
+    if(prev.logline && prev.logline !== p.logline){
+      diffHtml += '<div class="diff-item"><span class="diff-field">Logline変更:</span>';
+      diffHtml += '<div class="diff-old">' + escapeHtml(prev.logline) + '</div>';
+      diffHtml += '<div class="diff-new">' + escapeHtml(p.logline) + '</div></div>';
+    }
+    if(prev.hook && prev.hook !== p.hook){
+      diffHtml += '<div class="diff-item"><span class="diff-field">Hook変更:</span>';
+      diffHtml += '<div class="diff-old">' + escapeHtml(prev.hook) + '</div>';
+      diffHtml += '<div class="diff-new">' + escapeHtml(p.hook) + '</div></div>';
+    }
+    if(prev.content && prev.content !== p.content){
+      diffHtml += '<div class="diff-item"><span class="diff-field">本文が更新されています</span>';
+      diffHtml += '<button class="diff-toggle-btn" onclick="togglePrevContent()">前のバージョンを表示</button></div>';
+    }
+    diffHtml += '</div>';
+  }
+  let prevContentHtml = '';
+  if(hasPrev && prev.content && prev.content !== p.content){
+    prevContentHtml = `<div id="prevContentArea" class="hidden" style="margin:12px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:0.8rem;color:#ff6b6b;font-weight:700;">前のバージョン</span>
+        <button onclick="togglePrevContent()" style="font-size:0.75rem;color:var(--text3);background:var(--bg3);border:none;padding:4px 10px;border-radius:6px;cursor:pointer;">閉じる</button>
+      </div>
+      <div id="prevContentBody" class="md-content" style="opacity:0.7;border-left:3px solid #ff6b6b;padding-left:12px;"></div>
+    </div>`;
+  }
+  document.getElementById('detailHero').innerHTML = `
+    <div class="title">${escapeHtml(p.title)}</div>
+    <div class="meta">
+      <span class="card-type ${p.type}">${p.type==='proposal'?'企画書':'シード'}</span>
+      <span class="card-rating ${p.rating}">${p.rating}</span>
+    </div>
+    <div class="tags">${tagsHtml}</div>
+    <div class="highlight-box" style="position:relative">
+      <div class="label">Logline</div><p>${escapeHtml(p.logline)}</p>
+      <button class="section-fb-btn" data-fb-key="${p.id}_logline" onclick="toggleSectionFB('${p.id}_logline')">\u{1F4AC} <span class="fb-count" style="${getSectionFBCount(p.id+'_logline')>0?'':'display:none'}">${getSectionFBCount(p.id+'_logline')}</span></button>
+      ${renderSectionFBArea(p.id+'_logline')}
+    </div>
+    ${p.hook?`<div class="highlight-box hook" style="position:relative">
+      <div class="label">Hook</div><p>${escapeHtml(p.hook)}</p>
+      <button class="section-fb-btn" data-fb-key="${p.id}_hook" onclick="toggleSectionFB('${p.id}_hook')">\u{1F4AC} <span class="fb-count" style="${getSectionFBCount(p.id+'_hook')>0?'':'display:none'}">${getSectionFBCount(p.id+'_hook')}</span></button>
+      ${renderSectionFBArea(p.id+'_hook')}
+    </div>`:''}
+    ${diffHtml}
+    ${prevContentHtml}
+  `;
+  const isArchived = state.archivedItems[id];
+  const isPassed = state.passedItems[id];
+  const seedBtnHtml = p.type==='seed' ? '<button class="detail-action-btn seed-btn" id="detailSeedBtn">&#128203; 企画化する</button>' : '';
+  document.getElementById('detailActions').innerHTML = `
+    <button class="detail-action-btn like-btn${liked?' liked':''}" id="detailLikeBtn">${liked?'&#10084; ライク済':'&#9825; ライクする'}</button>
+    <button class="detail-action-btn archive-btn${isArchived?' archived':''}" id="detailArchiveBtn">${isArchived?'&#9989; アーカイブ済':'&#128230; アーカイブ'}</button>
+    <button class="detail-action-btn pass-btn${isPassed?' passed':''}" id="detailPassBtn">${isPassed?'&#128683; 見送り済':'&#128078; 見送り'}</button>
+    <button class="detail-action-btn pono-btn" id="detailPonoBtn">&#127959; 仮組みへ</button>
+    ${seedBtnHtml}
+  `;
+  if(!state.readItems[id]){ state.readItems[id]=true; saveRead(); }
+  document.getElementById('memoText').value = state.memos[id] || '';
+  const contentKey = p.id + '_content';
+  const contentFBHtml = `<div style="position:relative;margin:0 16px 16px">
+    <button class="section-fb-btn" data-fb-key="${contentKey}" onclick="toggleSectionFB('${contentKey}')" style="position:relative;top:auto;right:auto;float:right">\u{1F4AC} <span class="fb-count" style="${getSectionFBCount(contentKey)>0?'':'display:none'}">${getSectionFBCount(contentKey)}</span></button>
+    <div style="clear:both"></div>
+    ${renderSectionFBArea(contentKey)}
+  </div>`;
+  // Next unreviewed button
+  const nextUnreviewed = PROPOSALS_DATA.filter(pr => !state.reviews[pr.id] || !state.reviews[pr.id].status).find(pr => pr.id !== id);
+  let nextUnreviewedHtml = '';
+  if(nextUnreviewed){
+    nextUnreviewedHtml = `<button class="next-unreviewed-btn" onclick="window._goNextUnreviewed('${nextUnreviewed.id}')">&#9654; 次の未レビュー: ${escapeHtml(nextUnreviewed.title)}</button>`;
+  }
+  document.getElementById('mdContent').innerHTML = parseMD(p.content) + contentFBHtml + nextUnreviewedHtml;
+  document.getElementById('headerTitle').textContent = p.title;
+}
+
+function renderDashboard(){
+  const total = PROPOSALS_DATA.length;
+  const likeCount = Object.keys(state.likes).filter(k=>state.likes[k]).length;
+  const memoCount = Object.keys(state.memos).filter(k=>state.memos[k]&&state.memos[k].trim()).length;
+  const reviewCount = Object.keys(state.reviews).filter(k=>state.reviews[k]).length;
+  const ponoCount = state.pono.sentIds.length;
+  document.getElementById('dashGrid').innerHTML = `
+    <div class="dash-card"><div class="num">${total}</div><div class="lbl">総企画数</div></div>
+    <div class="dash-card"><div class="num">${likeCount}</div><div class="lbl">ライク</div></div>
+    <div class="dash-card"><div class="num">${memoCount}</div><div class="lbl">メモ</div></div>
+    <div class="dash-card"><div class="num" style="-webkit-text-fill-color:var(--cyan)">${reviewCount}</div><div class="lbl">レビュー</div></div>
+    <div class="dash-card"><div class="num" style="-webkit-text-fill-color:var(--green)">${ponoCount}</div><div class="lbl">仮組み</div></div>
+  `;
+  const tagCounts = {};
+  PROPOSALS_DATA.forEach(p => p.tags.forEach(t => { tagCounts[t]=(tagCounts[t]||0)+1; }));
+  const sorted = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]);
+  const max = sorted.length>0?sorted[0][1]:1;
+  document.getElementById('dashTagList').innerHTML = sorted.map(([tag,cnt]) => {
+    const c=getTagColor(tag); const pct=(cnt/max*100).toFixed(0);
+    return `<div class="dash-tag-row"><span class="tag-name" style="color:${c}">${tag}</span><div class="dash-tag-bar"><div class="dash-tag-bar-fill" style="width:${pct}%;background:${c}"></div></div><span class="tag-count">${cnt}</span></div>`;
+  }).join('');
+
+  // Potential proposals ("磨けば光る企画")
+  const potential = PROPOSALS_DATA.map(p=>({...p,score:calcPotentialScore(p)}))
+    .filter(p=>p.score>=2)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,5);
+  let potentialContainer = document.getElementById('dashPotential');
+  if(!potentialContainer){
+    potentialContainer = document.createElement('div');
+    potentialContainer.id = 'dashPotential';
+    const dashTags = document.getElementById('dashTags');
+    dashTags.parentNode.insertBefore(potentialContainer, dashTags);
+  }
+  if(potential.length>0){
+    let pHtml = '<div class="dash-section"><h3>\u{1F48E} 磨けば光る企画</h3>';
+    potential.forEach(p=>{
+      const reviewLabel = state.reviews[p.id] && state.reviews[p.id].status ? (' ['+state.reviews[p.id].status+']') : '';
+      pHtml += `<div class="dash-tag-row" style="cursor:pointer" onclick="window._goNextUnreviewed('${p.id}')">
+        <span class="tag-name" style="color:var(--accent)">${escapeHtml(p.title)}${reviewLabel}</span>
+        <span class="tag-count">\u2605${p.score}</span>
+      </div>`;
+    });
+    pHtml += '</div>';
+    potentialContainer.innerHTML = pHtml;
+  } else {
+    potentialContainer.innerHTML = '';
+  }
+}
+
+// ===== Navigation =====
+function showView(view){
+  state.view = view;
+  document.getElementById('listView').classList.toggle('hidden', view!=='list');
+  document.getElementById('detailView').className = view==='detail'?'detail-page visible':'detail-page';
+  document.getElementById('ideasView').className = view==='ideas'?'ideas-page visible':'ideas-page';
+  document.getElementById('ponoView').className = view==='pono'?'pono-page visible':'pono-page';
+  document.getElementById('dashboardView').className = view==='dashboard'?'dashboard visible':'dashboard';
+  document.getElementById('backBtn').classList.toggle('hidden', !['detail'].includes(view));
+  document.getElementById('ponoFab').classList.toggle('hidden', !(view==='pono' && state.pono.activeId));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const navView = n.dataset.view;
+    n.classList.toggle('active', navView===(view==='detail'?'list':view));
+  });
+  if(view==='list'){ document.getElementById('headerTitle').textContent='Anime Pitch Studio'; renderCards(); }
+  else if(view==='ideas'){ document.getElementById('headerTitle').textContent='アイデア帳'; renderIdeas(); }
+  else if(view==='pono'){ document.getElementById('headerTitle').textContent='仮組みスタジオ'; renderPonoView(); }
+  else if(view==='dashboard'){ document.getElementById('headerTitle').textContent='設定'; renderDashboard(); }
+  window.scrollTo(0,0);
+}
+
+// ===== Ideas System =====
+function renderIdeas(){
+  const list = state.ideas;
+  const container = document.getElementById('ideaList');
+  const empty = document.getElementById('ideaEmpty');
+  if(list.length===0){ container.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  container.innerHTML = list.map((idea,i) => `
+    <div class="idea-card${idea.done?' done':''}" data-idx="${i}">
+      <div class="idea-text">${escapeHtml(idea.text)}</div>
+      <div class="idea-meta">
+        <span>${new Date(idea.createdAt).toLocaleDateString('ja-JP')}</span>
+        <div class="idea-actions">
+          <button class="idea-action" data-idea-done="${i}" title="${idea.done?'戻す':'完了'}">${idea.done?'&#8634;':'&#10003;'}</button>
+          <button class="idea-action" data-idea-del="${i}" title="削除">&#128465;</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =============================
+// ===== PONO SYSTEM START =====
+// =============================
+
+let ponoTagFilter = 'all'; // 'all' | tag key
+
+function renderPonoView(){
+  const activeId = state.pono.activeId;
+  const ponoView = document.getElementById('ponoView');
+  // Show FAB only in memo view
+  document.getElementById('ponoFab').classList.toggle('hidden', !(state.view==='pono' && activeId));
+
+  if(activeId){
+    // State B: Show project's memos
+    const p = PROPOSALS_DATA.find(x=>x.id===activeId);
+    const projectTitle = p ? p.title : activeId;
+    const notes = state.pono.notes[activeId] || [];
+    // Filter by tag
+    const filtered = ponoTagFilter==='all' ? notes : notes.filter(n => n.tags && n.tags.includes(ponoTagFilter));
+    // Tag chips
+    let tagChipsHtml = '<div class="pono-tag-filter">';
+    tagChipsHtml += `<button class="pono-tag-chip${ponoTagFilter==='all'?' active':''}" data-ptag="all">ALL</button>`;
+    for(const [key,label] of Object.entries(PONO_TAGS)){
+      tagChipsHtml += `<button class="pono-tag-chip${ponoTagFilter===key?' active':''}" data-ptag="${key}">${label}</button>`;
+    }
+    tagChipsHtml += '</div>';
+    // Memo list
+    let memosHtml = '';
+    if(filtered.length===0){
+      memosHtml = '<div class="empty-state"><div class="icon">&#128221;</div><p>メモを追加してみよう<br><small>右下の＋ボタンから追加</small></p></div>';
+    } else {
+      memosHtml = '<div class="pono-memo-list">';
+      memosHtml += filtered.map((memo,i) => {
+        const origIdx = notes.indexOf(memo);
+        const tagsHtml = (memo.tags||[]).map(t => `<span class="pono-memo-tag tag-${t}">${PONO_TAGS[t]||t}</span>`).join('');
+        const dateStr = new Date(memo.updatedAt||memo.createdAt).toLocaleDateString('ja-JP');
+        return `<div class="pono-memo-card" data-memo-idx="${origIdx}">
+          <div class="pono-memo-text">${escapeHtml(memo.text)}</div>
+          ${tagsHtml?'<div class="pono-memo-tags">'+tagsHtml+'</div>':''}
+          <div class="pono-memo-bottom">
+            <span>${dateStr}</span>
+            <div class="pono-memo-actions">
+              <button class="pono-memo-action-btn" data-memo-edit="${origIdx}" title="編集">&#9998;</button>
+              <button class="pono-memo-action-btn" data-memo-del="${origIdx}" title="削除">&#128465;</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+      memosHtml += '</div>';
+    }
+    ponoView.innerHTML = `
+      <div class="pono-memo-header">
+        <button class="pono-memo-back" id="ponoBackBtn">&#8592;</button>
+        <div class="pono-memo-title" data-pono-goto-detail="${activeId}" style="cursor:pointer;text-decoration:underline">${escapeHtml(projectTitle)}</div>
+      </div>
+      ${tagChipsHtml}
+      ${memosHtml}
+    `;
+  } else {
+    // State A: Show project list
+    const sentIds = state.pono.sentIds;
+    if(sentIds.length===0){
+      ponoView.innerHTML = `
+        <div class="pono-project-list"></div>
+        <div class="empty-state">
+          <div style="font-size:3rem;opacity:0.5">&#127959;</div>
+          <p>企画の詳細画面から「仮組みへ」で追加</p>
+        </div>
+      `;
+      return;
+    }
+    const cardsHtml = sentIds.map((id,i) => {
+      const p = PROPOSALS_DATA.find(x=>x.id===id);
+      const title = p ? p.title : id;
+      const notes = state.pono.notes[id] || [];
+      const memoCount = notes.length;
+      const latestDate = notes.length > 0
+        ? new Date(Math.max(...notes.map(n=>new Date(n.updatedAt||n.createdAt).getTime()))).toLocaleDateString('ja-JP')
+        : '\u2014';
+      return `<div class="pono-project-card" data-pono-project="${id}" style="animation-delay:${i*0.04}s">
+        <div class="ppc-title">${escapeHtml(title)}</div>
+        <div class="ppc-meta">
+          <span class="ppc-memo-count">&#128221; ${memoCount}件のメモ</span>
+          <span>最終更新: ${latestDate}</span>
+        </div>
+      </div>`;
+    }).join('');
+    ponoView.innerHTML = `<div class="pono-project-list">${cardsHtml}</div>`;
+  }
+}
+
+// ===== Memo Edit Modal =====
+let memoEditMode = null; // 'add' | 'edit'
+let memoEditIdx = null;
+let memoEditTags = [];
+
+function openMemoModal(mode, idx){
+  memoEditMode = mode;
+  memoEditIdx = idx;
+  memoEditTags = [];
+  const modal = document.getElementById('memoEditModal');
+  const title = document.getElementById('memoModalTitle');
+  const textarea = document.getElementById('memoEditText');
+  title.textContent = mode==='add' ? 'メモを追加' : 'メモを編集';
+  if(mode==='edit'){
+    const activeId = state.pono.activeId;
+    const notes = state.pono.notes[activeId] || [];
+    const memo = notes[idx]; if(!memo) return;
+    textarea.value = memo.text;
+    memoEditTags = (memo.tags||[]).slice();
+  } else {
+    textarea.value = '';
+    memoEditTags = [];
+  }
+  // Sync tag buttons
+  document.querySelectorAll('.memo-tag-btn').forEach(b => {
+    b.classList.toggle('active', memoEditTags.includes(b.dataset.tag));
+  });
+  modal.classList.remove('hidden');
+  setTimeout(()=>textarea.focus(),100);
+}
+
+function closeMemoModal(){
+  document.getElementById('memoEditModal').classList.add('hidden');
+  memoEditMode = null;
+  memoEditIdx = null;
+  memoEditTags = [];
+}
+
+// ===== Event Listeners =====
+function init(){
+  loadStorage();
+  checkForUpdates();
+
+  function autoSendGoToPono() {
+    let count = 0;
+    for (const [id, r] of Object.entries(state.reviews)) {
+      if (r.status === 'go' && !state.pono.sentIds.includes(id)) {
+        state.pono.sentIds.push(id);
+        count++;
+      }
+    }
+    if (count > 0) { savePono(); showToast(count + '件をGO→仮組みに追加'); }
+  }
+  autoSendGoToPono();
+
+  renderTagFilter();
+  renderCards();
+  updateInboxBadge();
+
+  // Type filter
+  document.getElementById('typeFilter').addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if(!chip) return;
+    document.querySelectorAll('#typeFilter .filter-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    state.typeFilter = chip.dataset.type;
+    renderCards();
+  });
+
+  // Tag filter
+  document.getElementById('tagFilter').addEventListener('click', e => {
+    const badge = e.target.closest('.tag-badge');
+    if(!badge) return;
+    const tag = badge.dataset.tag;
+    const idx = state.selectedTags.indexOf(tag);
+    if(idx>=0) state.selectedTags.splice(idx,1); else state.selectedTags.push(tag);
+    renderTagFilter(); renderCards();
+  });
+
+  // AND/OR
+  document.getElementById('andOrToggle').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    state.tagMode = btn.dataset.mode;
+    document.querySelectorAll('#andOrToggle button').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.tagMode));
+    renderCards();
+  });
+
+  // Sort
+  document.getElementById('sortBtn').addEventListener('click', e => {
+    state.sort = state.sort==='rating'?'name':'rating';
+    e.target.textContent = state.sort==='rating'?'評価順':'名前順';
+    e.target.classList.toggle('active', state.sort==='name');
+    renderCards();
+  });
+
+  // Search
+  let searchDebounce;
+  document.getElementById('searchInput').addEventListener('input', e => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(()=>{ state.search=e.target.value.trim(); renderCards(); }, 200);
+  });
+
+  // Card click
+  document.getElementById('cardList').addEventListener('click', e => {
+    const heart = e.target.closest('[data-heart]');
+    if(heart){
+      e.stopPropagation();
+      const id = heart.dataset.heart;
+      if(state.likes[id]){delete state.likes[id]}else{state.likes[id]=true}
+      saveLikes(); renderCards(); return;
+    }
+    const card = e.target.closest('.card');
+    if(!card) return;
+    const id = card.dataset.id;
+    history.pushState({view:'detail',id}, '');
+    renderDetail(id); showView('detail');
+  });
+
+  // Back
+  document.getElementById('backBtn').addEventListener('click', ()=>showView('list'));
+
+  // Detail actions
+  document.getElementById('detailActions').addEventListener('click', e => {
+    const likeBtn = e.target.closest('.like-btn');
+    if(likeBtn){
+      const id=state.currentId;
+      if(state.likes[id]){delete state.likes[id]}else{state.likes[id]=true}
+      saveLikes(); renderDetail(id); showToast(state.likes[id]?'ライクしました':'ライクを解除しました'); return;
+    }
+    const archiveBtn = e.target.closest('.archive-btn');
+    if(archiveBtn){
+      const id=state.currentId;
+      if(state.archivedItems[id]){delete state.archivedItems[id]}else{state.archivedItems[id]=true}
+      saveArchived(); renderDetail(id); showToast(state.archivedItems[id]?'アーカイブしました':'アーカイブを解除しました'); return;
+    }
+    const passBtn = e.target.closest('.pass-btn');
+    if(passBtn){
+      const id=state.currentId;
+      if(state.passedItems[id]){delete state.passedItems[id]}else{state.passedItems[id]=true}
+      savePassedItems(); renderDetail(id); showToast(state.passedItems[id]?'見送りにしました':'見送りを解除しました'); return;
+    }
+    const seedBtn = e.target.closest('.seed-btn');
+    if(seedBtn){
+      const id = state.currentId;
+      let reqs = JSON.parse(localStorage.getItem('ap_seed_requests')||'[]');
+      if(!reqs.includes(id)){ reqs.push(id); localStorage.setItem('ap_seed_requests', JSON.stringify(reqs)); }
+      showToast('企画化リクエストを送信しました');
+      return;
+    }
+    const ponoBtn = e.target.closest('.pono-btn');
+    if(ponoBtn){
+      const id = state.currentId;
+      if(!state.pono.sentIds.includes(id)){
+        state.pono.sentIds.push(id);
+        if(!state.pono.notes[id]) state.pono.notes[id] = [];
+        savePono();
+      }
+      // Auto-generate PONO notes from content sections if none exist
+      if(!state.pono.notes[id] || state.pono.notes[id].length===0 || Object.values(state.pono.notes[id]||{}).every(a=>!a||a.length===0)){
+        const p = PROPOSALS_DATA.find(x=>x.id===id);
+        if(p && p.content){
+          const sections = p.content.split(/^## /m).filter(s=>s.trim());
+          const tagMap = {
+            '\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC':'character','\u30AD\u30E3\u30E9':'character',
+            '\u30B9\u30C8\u30FC\u30EA\u30FC':'script','\u4E16\u754C\u89B3':'world','\u4E16\u754C':'world',
+            '\u30ED\u30B0\u30E9\u30A4\u30F3':'idea','\u30D5\u30C3\u30AF':'idea',
+            '\u6620\u50CF':'asset','\u30D3\u30B8\u30E5\u30A2\u30EB':'asset','\u7F8E\u8853':'asset',
+            '\u30C6\u30FC\u30DE':'idea','\u4F01\u753B':'idea'
+          };
+          const autoNotes = [];
+          sections.forEach(s=>{
+            const firstLine = s.split('\n')[0].trim();
+            let tag = 'idea';
+            for(const [key,val] of Object.entries(tagMap)){
+              if(firstLine.includes(key)){tag=val;break;}
+            }
+            const text = s.slice(firstLine.length).trim().slice(0,200);
+            if(text) autoNotes.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,5), text:'\u3010'+firstLine+'\u3011\n'+text, tags:[tag], createdAt:new Date().toISOString()});
+          });
+          if(autoNotes.length>0){
+            if(!state.pono.notes[id]) state.pono.notes[id]=[];
+            state.pono.notes[id].push(...autoNotes);
+            savePono();
+            showToast(autoNotes.length+'\u4EF6\u306E\u30E1\u30E2\u3092\u81EA\u52D5\u751F\u6210\u3057\u307E\u3057\u305F');
+            return;
+          }
+        }
+      }
+      showToast('\u4EEE\u7D44\u307F\u306B\u8FFD\u52A0\u3057\u307E\u3057\u305F');
+    }
+  });
+
+  // Memo save
+  document.getElementById('memoSaveBtn').addEventListener('click', () => {
+    const val = document.getElementById('memoText').value.trim();
+    if(val) state.memos[state.currentId]=val; else delete state.memos[state.currentId];
+    saveMemos(); showToast('メモを保存しました');
+  });
+
+  // Bottom nav
+  document.getElementById('bottomNav').addEventListener('click', e => {
+    const item = e.target.closest('.nav-item');
+    if(!item) return;
+    const view = item.dataset.view;
+    if(view!=='list') history.pushState({view}, '');
+    showView(view);
+  });
+
+  // Review system
+  document.getElementById('starRating').addEventListener('click', e => {
+    const star = e.target.closest('.star');
+    if(!star) return;
+    const val = parseInt(star.dataset.val);
+    const id = state.currentId;
+    if(!state.reviews[id]) state.reviews[id]={};
+    state.reviews[id].rating = val;
+    updateStarDisplay(val);
+  });
+  document.getElementById('statusPills').addEventListener('click', e => {
+    const pill = e.target.closest('.status-pill');
+    if(!pill) return;
+    const status = pill.dataset.status;
+    const id = state.currentId;
+    if(!state.reviews[id]) state.reviews[id]={};
+    state.reviews[id].status = status;
+    document.querySelectorAll('.status-pill').forEach(p=>p.classList.remove('active'));
+    pill.classList.add('active');
+  });
+  document.getElementById('reviewSaveBtn').addEventListener('click', () => {
+    const id=state.currentId; if(!id) return;
+    if(!state.reviews[id]) state.reviews[id]={};
+    state.reviews[id].comment = document.getElementById('reviewComment').value;
+    state.reviews[id].timestamp = new Date().toISOString();
+    saveReviews();
+    document.getElementById('reviewSaved').textContent = '保存しました ('+new Date().toLocaleTimeString()+')';
+    showToast('レビュー保存しました');
+  });
+  function updateStarDisplay(val){
+    document.querySelectorAll('#starRating .star').forEach(s=>s.classList.toggle('active',parseInt(s.dataset.val)<=val));
+  }
+  function loadReviewForCurrent(){
+    const id=state.currentId; const r=state.reviews[id];
+    document.getElementById('reviewComment').value = r?(r.comment||''):'';
+    updateStarDisplay(r?(r.rating||0):0);
+    document.querySelectorAll('.status-pill').forEach(p=>p.classList.toggle('active',r&&r.status===p.dataset.status));
+    document.getElementById('reviewSaved').textContent = r&&r.timestamp?'最終保存: '+new Date(r.timestamp).toLocaleString():'';
+  }
+  const origRenderDetail = renderDetail;
+  renderDetail = function(id){ origRenderDetail(id); loadReviewForCurrent(); };
+
+  // ===== Ideas events =====
+  document.getElementById('ideaAddBtn').addEventListener('click', () => {
+    const input = document.getElementById('ideaInput');
+    const text = input.value.trim();
+    if(!text) return;
+    state.ideas.unshift({id:Date.now().toString(), text, createdAt:new Date().toISOString(), done:false});
+    saveIdeas(); input.value=''; renderIdeas(); showToast('アイデアを追加しました');
+  });
+  document.getElementById('ideaInput').addEventListener('keydown', e => {
+    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); document.getElementById('ideaAddBtn').click(); }
+  });
+  document.getElementById('ideaList').addEventListener('click', e => {
+    const doneBtn = e.target.closest('[data-idea-done]');
+    if(doneBtn){ const idx=parseInt(doneBtn.dataset.ideaDone); state.ideas[idx].done=!state.ideas[idx].done; saveIdeas(); renderIdeas(); return; }
+    const delBtn = e.target.closest('[data-idea-del]');
+    if(delBtn){ const idx=parseInt(delBtn.dataset.ideaDel); state.ideas.splice(idx,1); saveIdeas(); renderIdeas(); showToast('削除しました'); }
+  });
+
+  // ===== PONO events =====
+  // FAB - add memo
+  document.getElementById('ponoFab').addEventListener('click', () => {
+    if(!state.pono.activeId) return;
+    openMemoModal('add', null);
+  });
+
+  // PONO view delegated events
+  document.getElementById('ponoView').addEventListener('click', e => {
+    // Project card click (State A → State B)
+    const projectCard = e.target.closest('[data-pono-project]');
+    if(projectCard){
+      state.pono.activeId = projectCard.dataset.ponoProject;
+      ponoTagFilter = 'all';
+      savePono();
+      renderPonoView();
+      return;
+    }
+    // Back button in memo view
+    const backBtn = e.target.closest('#ponoBackBtn');
+    if(backBtn){
+      state.pono.activeId = null;
+      ponoTagFilter = 'all';
+      savePono();
+      renderPonoView();
+      return;
+    }
+    // Title click -> go to detail
+    const titleLink = e.target.closest('[data-pono-goto-detail]');
+    if(titleLink){
+      const detailId = titleLink.dataset.ponoGotoDetail;
+      renderDetail(detailId);
+      showView('detail');
+      return;
+    }
+    // Tag filter chips
+    const tagChip = e.target.closest('[data-ptag]');
+    if(tagChip){
+      ponoTagFilter = tagChip.dataset.ptag;
+      renderPonoView();
+      return;
+    }
+    // Memo edit button
+    const editBtn = e.target.closest('[data-memo-edit]');
+    if(editBtn){
+      openMemoModal('edit', parseInt(editBtn.dataset.memoEdit));
+      return;
+    }
+    // Memo delete button
+    const delBtn = e.target.closest('[data-memo-del]');
+    if(delBtn){
+      const idx = parseInt(delBtn.dataset.memoDel);
+      const activeId = state.pono.activeId;
+      if(!activeId) return;
+      const notes = state.pono.notes[activeId] || [];
+      notes.splice(idx,1);
+      savePono(); renderPonoView(); showToast('削除しました');
+      return;
+    }
+  });
+
+  // Memo modal tag selector (toggle)
+  document.getElementById('memoTagSelect').addEventListener('click', e => {
+    const btn = e.target.closest('.memo-tag-btn');
+    if(!btn) return;
+    const tag = btn.dataset.tag;
+    const idx = memoEditTags.indexOf(tag);
+    if(idx>=0){ memoEditTags.splice(idx,1); btn.classList.remove('active'); }
+    else{ memoEditTags.push(tag); btn.classList.add('active'); }
+  });
+
+  // Memo modal save
+  document.getElementById('memoEditSaveBtn').addEventListener('click', () => {
+    const text = document.getElementById('memoEditText').value.trim();
+    if(!text){ showToast('内容を入力してください'); return; }
+    const activeId = state.pono.activeId;
+    if(!activeId){ showToast('企画が選択されていません'); return; }
+    if(!state.pono.notes[activeId]) state.pono.notes[activeId] = [];
+    const notes = state.pono.notes[activeId];
+    if(memoEditMode==='add'){
+      notes.push({ id: Date.now().toString(), text, tags: memoEditTags.slice(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      showToast('メモを追加しました');
+    } else if(memoEditMode==='edit' && memoEditIdx!==null){
+      notes[memoEditIdx].text = text;
+      notes[memoEditIdx].tags = memoEditTags.slice();
+      notes[memoEditIdx].updatedAt = new Date().toISOString();
+      showToast('メモを更新しました');
+    }
+    savePono(); closeMemoModal(); renderPonoView();
+  });
+
+  document.getElementById('memoEditCancelBtn').addEventListener('click', closeMemoModal);
+  document.getElementById('memoEditModal').addEventListener('click', e => {
+    if(e.target.classList.contains('memo-edit-modal')) closeMemoModal();
+  });
+
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const likedData = PROPOSALS_DATA.filter(p=>state.likes[p.id]);
+    const blob = new Blob([JSON.stringify(likedData,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='liked_proposals.json'; a.click();
+    URL.revokeObjectURL(url); showToast('エクスポートしました');
+  });
+
+  document.getElementById('exportFeedbackBtn').addEventListener('click', () => {
+    const feedback = {
+      exportDate: new Date().toISOString(),
+      summary: { total:PROPOSALS_DATA.length, reviewed:Object.keys(state.reviews).length, liked:Object.keys(state.likes).filter(k=>state.likes[k]).length },
+      reviews: []
+    };
+    for(const [id,r] of Object.entries(state.reviews)){
+      const p=PROPOSALS_DATA.find(x=>x.id===id); if(!p||!r) continue;
+      feedback.reviews.push({ id, title:p.title, type:p.type, rating:r.rating||0, status:r.status||'', comment:r.comment||'', currentRating:p.rating, tags:p.tags, logline:p.logline, memo:state.memos[id]||'', liked:!!state.likes[id], timestamp:r.timestamp||'' });
+    }
+    feedback.reviews.sort((a,b)=>(b.rating||0)-(a.rating||0));
+    const blob = new Blob([JSON.stringify(feedback,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='feedback.json'; a.click();
+    URL.revokeObjectURL(url); showToast('フィードバックをエクスポートしました');
+  });
+
+  // Swipe navigation in detail view
+  let swipeStartX=0, swipeStartY=0;
+  const detailEl = document.getElementById('detailView');
+  detailEl.addEventListener('touchstart', e=>{
+    swipeStartX=e.touches[0].clientX;
+    swipeStartY=e.touches[0].clientY;
+  },{passive:true});
+  detailEl.addEventListener('touchend', e=>{
+    const dx=e.changedTouches[0].clientX-swipeStartX;
+    const dy=e.changedTouches[0].clientY-swipeStartY;
+    if(Math.abs(dx)<80||Math.abs(dy)>Math.abs(dx)*0.7) return; // too short or too vertical
+    const list=getFiltered();
+    const idx=list.findIndex(p=>p.id===state.currentId);
+    if(idx<0) return;
+    let nextIdx = dx<0 ? idx+1 : idx-1; // left swipe=next, right=prev
+    if(nextIdx<0) nextIdx=list.length-1;
+    if(nextIdx>=list.length) nextIdx=0;
+    renderDetail(list[nextIdx].id);
+    showToast(`${nextIdx+1}/${list.length}`);
+    window.scrollTo(0,0);
+  },{passive:true});
+
+  // Popstate
+  window.addEventListener('popstate', () => {
+    if(state.view==='detail'||state.view==='dashboard') showView('list');
+  });
+
+  // Backup
+  document.getElementById('openBackupBtn').addEventListener('click', ()=>document.getElementById('backupModal').classList.remove('hidden'));
+  document.getElementById('backupCloseBtn').addEventListener('click', ()=>document.getElementById('backupModal').classList.add('hidden'));
+  document.getElementById('backupModal').addEventListener('click', e=>{if(e.target.id==='backupModal')e.target.classList.add('hidden')});
+  document.getElementById('backupExportBtn').addEventListener('click', () => {
+    const backup = { version:6, exportDate:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions, sectionComments:state.sectionComments };
+    const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='anime-pitch-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+    URL.revokeObjectURL(url); showToast('バックアップを書き出しました');
+  });
+  document.getElementById('backupImportFile').addEventListener('change', e => {
+    const file=e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      try{
+        const data = JSON.parse(ev.target.result);
+        if(!data.version){ showToast('無効なバックアップファイルです'); return; }
+        state.likes=data.likes||{}; state.memos=data.memos||{}; state.reviews=data.reviews||{};
+        state.readItems=data.readItems||{}; state.archivedItems=data.archivedItems||{};
+        state.passedItems=data.passedItems||{};
+        state.ideas=data.ideas||[];
+        if(data.pono) state.pono=Object.assign(state.pono,data.pono);
+        if(data.seenHashes) state.seenHashes=data.seenHashes;
+        if(data.prevVersions) state.prevVersions=data.prevVersions;
+        if(data.sectionComments) state.sectionComments=data.sectionComments;
+        saveLikes();saveMemos();saveReviews();saveRead();saveArchived();savePassedItems();saveIdeas();savePono();saveSeenHashes();savePrevVersions();saveSectionComments();
+        renderCards();
+        document.getElementById('backupModal').classList.add('hidden');
+        showToast('バックアップを復元しました！');
+      }catch(err){ showToast('ファイルの読み込みに失敗しました'); }
+    };
+    reader.readAsText(file); e.target.value='';
+  });
+
+  // ===== GitHub Sync =====
+  const SYNC_REPO = 'studiogosso/anime-pitch-app';
+  const SYNC_FILE = 'user-data.json';
+  let syncToken = localStorage.getItem('ap_sync_token')||'';
+  let syncSha = localStorage.getItem('ap_sync_sha')||'';
+  let syncTimer = null;
+
+  function getSyncData(){
+    return { version:6, syncedAt:new Date().toISOString(), likes:state.likes, memos:state.memos, reviews:state.reviews, readItems:state.readItems, archivedItems:state.archivedItems, passedItems:state.passedItems, ideas:state.ideas, pono:state.pono, seenHashes:state.seenHashes, prevVersions:state.prevVersions, sectionComments:state.sectionComments };
+  }
+  function updateSyncUI(status,label){
+    document.getElementById('syncDot').className='sync-dot '+status;
+    document.getElementById('syncLabel').textContent=label;
+  }
+  function initSyncUI(){
+    const input=document.getElementById('syncTokenInput');
+    const disconn=document.getElementById('syncDisconnectBtn');
+    if(syncToken){ input.value='••••••••••'; disconn.classList.remove('hidden'); updateSyncUI('ok','接続済み'); }
+    else{ disconn.classList.add('hidden'); updateSyncUI('','未設定'); }
+  }
+  async function syncToGitHub(){
+    if(!syncToken) return;
+    updateSyncUI('syncing','同期中...');
+    try{
+      const content=btoa(unescape(encodeURIComponent(JSON.stringify(getSyncData(),null,2))));
+      const body={message:'sync: '+new Date().toISOString(),content};
+      if(syncSha) body.sha=syncSha;
+      const res=await fetch('https://api.github.com/repos/'+SYNC_REPO+'/contents/'+SYNC_FILE,{method:'PUT',headers:{'Authorization':'Bearer '+syncToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!res.ok){ const err=await res.json(); if(res.status===409){await fetchSyncSha();return syncToGitHub();} throw new Error(err.message||res.status); }
+      const result=await res.json(); syncSha=result.content.sha; localStorage.setItem('ap_sync_sha',syncSha);
+      updateSyncUI('ok','同期済み '+new Date().toLocaleTimeString());
+    }catch(e){ updateSyncUI('error','同期エラー: '+e.message); }
+  }
+  async function fetchSyncSha(){
+    try{
+      const res=await fetch('https://api.github.com/repos/'+SYNC_REPO+'/contents/'+SYNC_FILE,{headers:{'Authorization':'Bearer '+syncToken}});
+      if(res.ok){ const data=await res.json(); syncSha=data.sha; localStorage.setItem('ap_sync_sha',syncSha); }
+      else{ syncSha=''; localStorage.removeItem('ap_sync_sha'); }
+    }catch(e){ syncSha=''; }
+  }
+  function scheduleSyncDebounced(){ if(!syncToken) return; clearTimeout(syncTimer); syncTimer=setTimeout(syncToGitHub,3000); }
+  const origSaveLikes=saveLikes; saveLikes=function(){origSaveLikes();scheduleSyncDebounced()};
+  const origSaveMemos=saveMemos; saveMemos=function(){origSaveMemos();scheduleSyncDebounced()};
+  const origSaveReviews=saveReviews; saveReviews=function(){origSaveReviews();scheduleSyncDebounced()};
+  const origSaveRead=saveRead; saveRead=function(){origSaveRead();scheduleSyncDebounced()};
+  const origSaveArchived=saveArchived; saveArchived=function(){origSaveArchived();scheduleSyncDebounced()};
+  const origSavePassedItems=savePassedItems; savePassedItems=function(){origSavePassedItems();scheduleSyncDebounced()};
+  const origSaveIdeas=saveIdeas; saveIdeas=function(){origSaveIdeas();scheduleSyncDebounced()};
+  const origSavePono=savePono; savePono=function(){origSavePono();scheduleSyncDebounced()};
+  const origSaveSeenHashes=saveSeenHashes; saveSeenHashes=function(){origSaveSeenHashes();scheduleSyncDebounced()};
+  const origSavePrevVersions=savePrevVersions; savePrevVersions=function(){origSavePrevVersions();scheduleSyncDebounced()};
+  const origSaveSectionComments=saveSectionComments; saveSectionComments=function(){origSaveSectionComments();scheduleSyncDebounced()};
+
+  document.getElementById('syncSaveBtn').addEventListener('click', async()=>{
+    const input=document.getElementById('syncTokenInput'); const token=input.value.trim();
+    if(!token||token==='••••••••••') return;
+    syncToken=token; localStorage.setItem('ap_sync_token',syncToken);
+    await fetchSyncSha(); await syncToGitHub(); initSyncUI(); showToast('GitHub同期を設定しました');
+  });
+  document.getElementById('syncDisconnectBtn').addEventListener('click',()=>{
+    syncToken=''; syncSha=''; localStorage.removeItem('ap_sync_token'); localStorage.removeItem('ap_sync_sha');
+    initSyncUI(); showToast('同期を解除しました');
+  });
+  initSyncUI();
+
+  // ===== Compare Mode =====
+  let compareMode = false;
+  let compareSelected = [];
+
+  function toggleCompareMode(){
+    compareMode = !compareMode;
+    compareSelected = [];
+    document.getElementById('compareToggle').classList.toggle('active', compareMode);
+    document.getElementById('compareBar').classList.toggle('hidden', !compareMode);
+    updateCompareUI();
+    renderCards();
+  }
+  function updateCompareUI(){
+    document.getElementById('compareCount').textContent = compareSelected.length + '\u4EF6\u9078\u629E\u4E2D';
+    const goBtn = document.getElementById('compareGoBtn');
+    goBtn.disabled = compareSelected.length < 2;
+  }
+  function renderCompareModal(){
+    const modal = document.getElementById('compareModal');
+    const cols = document.getElementById('compareColumns');
+    const proposals = compareSelected.map(id => PROPOSALS_DATA.find(p=>p.id===id)).filter(Boolean);
+    if(proposals.length < 2){ showToast('2\u4EF6\u4EE5\u4E0A\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044'); return; }
+    cols.innerHTML = proposals.map(p => {
+      const r = state.reviews[p.id];
+      const tagsHtml = p.tags.map(t => {
+        const c = getTagColor(t);
+        return `<span class="tag-badge" style="background:${c}22;color:${c};font-size:0.65rem;padding:2px 6px">${t}</span>`;
+      }).join('');
+      let statusHtml = '';
+      if(r && r.status){
+        const statusColors = {go:'var(--green)',rework:'var(--yellow)',pass:'var(--red)',maybe:'var(--accent)'};
+        const statusLabels = {go:'GO',rework:'\u8981\u6539\u5584',pass:'\u898B\u9001\u308A',maybe:'\u4FDD\u7559'};
+        statusHtml = `<span class="col-status" style="background:${statusColors[r.status]}22;color:${statusColors[r.status]}">${statusLabels[r.status]||r.status}</span>`;
+      } else {
+        statusHtml = '<span class="col-status" style="background:var(--bg3);color:var(--text3)">\u672A\u30EC\u30D3\u30E5\u30FC</span>';
+      }
+      const starHtml = r && r.rating ? '\u2605'.repeat(r.rating) + '\u2606'.repeat(5-r.rating) : '\u2606\u2606\u2606\u2606\u2606';
+      const liked = state.likes[p.id] ? '<span style="color:var(--pink)">\u2764</span>' : '';
+      return `<div class="compare-col">
+        <div class="col-section">
+          <div class="col-title">${escapeHtml(p.title)}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+            <span class="col-rating card-rating ${p.rating}">${p.rating}</span>
+            <span class="card-type ${p.type}" style="font-size:0.6rem">${p.type==='proposal'?'\u4F01\u753B\u66F8':'\u30B7\u30FC\u30C9'}</span>
+            ${liked}
+          </div>
+        </div>
+        <div class="col-section">
+          <div class="col-label">Logline</div>
+          <div class="col-text">${escapeHtml(p.logline)}</div>
+        </div>
+        ${p.hook ? `<div class="col-section"><div class="col-label">Hook</div><div class="col-text">${escapeHtml(p.hook)}</div></div>` : ''}
+        <div class="col-section">
+          <div class="col-label">\u30BF\u30B0</div>
+          <div class="col-tags">${tagsHtml}</div>
+        </div>
+        <div class="col-section">
+          <div class="col-label">\u30EC\u30D3\u30E5\u30FC</div>
+          <div style="margin-bottom:4px">${statusHtml}</div>
+          <div style="font-size:0.85rem;color:var(--yellow)">${starHtml}</div>
+          ${r && r.comment ? `<div class="col-text" style="margin-top:4px;font-size:0.75rem;font-style:italic">${escapeHtml(r.comment).slice(0,100)}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    modal.classList.remove('hidden');
+  }
+
+  document.getElementById('compareToggle').addEventListener('click', toggleCompareMode);
+  document.getElementById('compareCancelBtn').addEventListener('click', ()=>{
+    compareMode = false;
+    compareSelected = [];
+    document.getElementById('compareToggle').classList.remove('active');
+    document.getElementById('compareBar').classList.add('hidden');
+    renderCards();
+  });
+  document.getElementById('compareGoBtn').addEventListener('click', ()=>{
+    if(compareSelected.length >= 2) renderCompareModal();
+  });
+  document.getElementById('compareModalClose').addEventListener('click', ()=>{
+    document.getElementById('compareModal').classList.add('hidden');
+  });
+  document.getElementById('compareModal').addEventListener('click', e=>{
+    if(e.target.id==='compareModal') e.target.classList.add('hidden');
+  });
+
+  // Intercept card clicks for compare mode
+  const origCardListEl = document.getElementById('cardList');
+  origCardListEl.addEventListener('click', e => {
+    if(!compareMode) return;
+    // Allow heart button to work normally even in compare mode
+    if(e.target.closest('[data-heart]')) return;
+    const card = e.target.closest('.card');
+    if(!card) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const id = card.dataset.id;
+    const idx = compareSelected.indexOf(id);
+    if(idx >= 0){
+      compareSelected.splice(idx, 1);
+    } else {
+      if(compareSelected.length >= 3){ showToast('\u6700\u59273\u4EF6\u307E\u3067\u9078\u629E\u3067\u304D\u307E\u3059'); return; }
+      compareSelected.push(id);
+    }
+    updateCompareUI();
+    // Update checkboxes visually
+    document.querySelectorAll('.card .compare-check').forEach(ch => {
+      ch.classList.toggle('checked', compareSelected.includes(ch.closest('.card').dataset.id));
+    });
+  }, true); // Use capture phase to intercept before normal handler
+
+  // Patch renderCards to add checkboxes in compare mode
+  const origRenderCards = renderCards;
+  renderCards = function(){
+    origRenderCards();
+    if(compareMode){
+      document.querySelectorAll('.card').forEach(card => {
+        const id = card.dataset.id;
+        if(!card.querySelector('.compare-check')){
+          const check = document.createElement('div');
+          check.className = 'compare-check' + (compareSelected.includes(id) ? ' checked' : '');
+          check.innerHTML = '\u2713';
+          card.appendChild(check);
+        }
+      });
+    }
+  };
+
+  // ===== PWA Install =====
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault(); deferredPrompt=e;
+    if(!localStorage.getItem('ap_install_dismissed')) document.getElementById('installBanner').classList.remove('hidden');
+  });
+  document.getElementById('installBtn').addEventListener('click',async()=>{
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt(); const result=await deferredPrompt.userChoice;
+    if(result.outcome==='accepted') showToast('アプリをインストールしました！');
+    deferredPrompt=null; document.getElementById('installBanner').classList.add('hidden');
+  });
+  document.getElementById('installClose').addEventListener('click',()=>{
+    document.getElementById('installBanner').classList.add('hidden');
+    localStorage.setItem('ap_install_dismissed','1');
+  });
+  window.addEventListener('appinstalled',()=>{ document.getElementById('installBanner').classList.add('hidden'); deferredPrompt=null; });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(e=>console.log('SW failed:',e));
+}
+</script>
+</body>
+</html>
