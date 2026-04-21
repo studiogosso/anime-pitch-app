@@ -1040,12 +1040,13 @@ function loadStorage(){
     if(pv) state.prevVersions = JSON.parse(pv);
   }catch(e){}
 }
-function saveLikes(){ localStorage.setItem('ap_likes', JSON.stringify(state.likes)); }
-function saveMemos(){ localStorage.setItem('ap_memos', JSON.stringify(state.memos)); }
-function saveReviews(){ localStorage.setItem('ap_reviews', JSON.stringify(state.reviews)); }
-function saveRead(){ localStorage.setItem('ap_read', JSON.stringify(state.readItems)); }
-function saveArchived(){ localStorage.setItem('ap_archived', JSON.stringify(state.archivedItems)); }
-function savePassedItems(){ localStorage.setItem('ap_passed', JSON.stringify(state.passedItems)); }
+function _refreshBadges(){ if(typeof updateInboxBadge==='function') try{ updateInboxBadge(); }catch(e){} }
+function saveLikes(){ localStorage.setItem('ap_likes', JSON.stringify(state.likes)); _refreshBadges(); }
+function saveMemos(){ localStorage.setItem('ap_memos', JSON.stringify(state.memos)); _refreshBadges(); }
+function saveReviews(){ localStorage.setItem('ap_reviews', JSON.stringify(state.reviews)); _refreshBadges(); }
+function saveRead(){ localStorage.setItem('ap_read', JSON.stringify(state.readItems)); _refreshBadges(); }
+function saveArchived(){ localStorage.setItem('ap_archived', JSON.stringify(state.archivedItems)); _refreshBadges(); }
+function savePassedItems(){ localStorage.setItem('ap_passed', JSON.stringify(state.passedItems)); _refreshBadges(); }
 function saveIdeas(){ localStorage.setItem('ap_ideas', JSON.stringify(state.ideas)); }
 function savePono(){ localStorage.setItem('ap_pono', JSON.stringify(state.pono)); }
 function saveSeenHashes(){ localStorage.setItem('ap_seen_hashes', JSON.stringify(state.seenHashes)); }
@@ -1073,10 +1074,30 @@ function getUnreadCount(){
 }
 
 function updateInboxBadge(){
+  const active = PROPOSALS_DATA.filter(p => !state.archivedItems[p.id] && !state.passedItems[p.id]);
+  const setBadge = (id, n) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = n;
+    el.classList.toggle('hidden', !(n>0));
+  };
+  const unread = active.filter(p => !state.readItems[p.id]).length;
+  setBadge('inboxBadge', unread);
+  setBadge('allBadge', PROPOSALS_DATA.length);
+  setBadge('proposalBadge', active.filter(p => p.type==='proposal').length);
+  setBadge('seedBadge', active.filter(p => p.type==='seed').length);
+  setBadge('likedBadge', PROPOSALS_DATA.filter(p => state.likes[p.id]).length);
+  setBadge('memoBadge', PROPOSALS_DATA.filter(p => state.memos[p.id] && state.memos[p.id].trim()).length);
+  setBadge('archivedBadge', PROPOSALS_DATA.filter(p => state.archivedItems[p.id]).length);
+  setBadge('passedBadge', PROPOSALS_DATA.filter(p => state.passedItems[p.id]).length);
+  setBadge('unreviewedBadge', PROPOSALS_DATA.filter(p => !state.reviews[p.id] || !state.reviews[p.id].status).length);
+  setBadge('goBadge', PROPOSALS_DATA.filter(p => state.reviews[p.id] && state.reviews[p.id].status==='go').length);
+  setBadge('reworkBadge', PROPOSALS_DATA.filter(p => state.reviews[p.id] && state.reviews[p.id].status==='rework').length);
+  setBadge('maybeBadge', PROPOSALS_DATA.filter(p => state.reviews[p.id] && state.reviews[p.id].status==='maybe').length);
+  setBadge('passBadge', PROPOSALS_DATA.filter(p => state.reviews[p.id] && state.reviews[p.id].status==='pass').length);
+}
 
-
-
-  function hashProposal(p){
+function hashProposal(p){
   const str = (p.logline||'') + (p.hook||'') + (p.content||'') + (p.tags||[]).join(',');
   let h = 0;
   for(let i = 0; i < str.length; i++){ h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
